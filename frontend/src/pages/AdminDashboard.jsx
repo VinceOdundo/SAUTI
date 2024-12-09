@@ -1,32 +1,79 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+  });
+  const { user: currentUser } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const fetchUsers = useCallback(
+    async (page = 1) => {
+      if (!currentUser?.isAdmin) {
+        setError("Unauthorized access");
+        return;
+      }
 
-  const fetchUsers = async () => {
-    try {
-      const response = await axios.get("/api/users");
-      setUsers(response.data.users);
-      setLoading(false);
-    } catch (err) {
-      setError(err.response?.data?.message || "Error fetching users");
-      setLoading(false);
-    }
-  };
+      try {
+        setLoading(true);
+        const response = await axios.get("/api/users", {
+          params: { page, limit: pagination.limit },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "X-Admin-Action": "true",
+          },
+        });
+
+        setUsers(response.data.users);
+        setPagination({
+          ...pagination,
+          page,
+          total: response.data.total,
+        });
+      } catch (err) {
+        setError(err.response?.data?.message || "Error fetching users");
+        if (err.response?.status === 403) {
+          navigate("/login");
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentUser?.isAdmin, pagination.limit]
+  );
 
   const handleRoleUpdate = async (userId, newRole) => {
     try {
-      await axios.patch(`/api/users/${userId}/role`, { role: newRole });
-      fetchUsers();
+      await axios.patch(
+        `/api/users/${userId}/role`,
+        { role: newRole },
+        {
+          headers: {
+            "X-Admin-Action": "true",
+            "X-Action-Reason": "role_update",
+          },
+        }
+      );
+
+      // Optimistic update
+      setUsers((prev) =>
+        prev.map((user) =>
+          user._id === userId ? { ...user, role: newRole } : user
+        )
+      );
+
+      toast.success("Role updated successfully");
     } catch (err) {
-      setError(err.response?.data?.message || "Error updating user role");
+      toast.error(err.response?.data?.message || "Error updating user role");
     }
   };
 

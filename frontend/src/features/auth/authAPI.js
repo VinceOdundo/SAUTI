@@ -1,13 +1,11 @@
-import axios from "axios";
 import { authStart, authSuccess, authFail } from "./authSlice";
 import { setAuthToken } from "../../utils/authUtils";
-
-const API_URL = "http://localhost:5000/api/auth";
+import api from "../../utils/axiosConfig";
 
 export const register = (userData) => async (dispatch) => {
   try {
     dispatch(authStart());
-    const response = await axios.post(`${API_URL}/register`, userData);
+    const response = await api.post("/auth/register", userData);
     setAuthToken(response.data.token);
     dispatch(authSuccess(response.data.user));
   } catch (error) {
@@ -18,8 +16,8 @@ export const register = (userData) => async (dispatch) => {
 export const login = (credentials) => async (dispatch) => {
   try {
     dispatch(authStart());
-    const response = await axios.post(`${API_URL}/login`, credentials);
-    setAuthToken(response.data.token);
+    const response = await api.post("/auth/login", credentials);
+    localStorage.setItem("token", response.data.token);
     dispatch(authSuccess(response.data.user));
   } catch (error) {
     dispatch(authFail(error.response?.data?.message || "Login failed"));
@@ -29,7 +27,7 @@ export const login = (credentials) => async (dispatch) => {
 export const getCurrentUser = () => async (dispatch) => {
   try {
     dispatch(authStart());
-    const response = await axios.get(`${API_URL}/me`);
+    const response = await api.get("/auth/me");
     dispatch(authSuccess(response.data.user));
   } catch (error) {
     dispatch(authFail(error.response?.data?.message || "Failed to fetch user"));

@@ -22,8 +22,10 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await dispatch(register(formData));
-    navigate("/");
+    const result = await dispatch(register(formData));
+    if (!result.error) {
+      navigate("/complete-profile"); // Redirect to profile completion page
+    }
   };
 
   return (

@@ -14,10 +14,18 @@ const Navbar = () => {
     <nav className="bg-dark-700 border-b border-dark-600">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
             <Link to="/" className="text-2xl font-bold text-white">
               Sauti
             </Link>
+            {isAuthenticated && (
+              <Link
+                to="/forum"
+                className="text-gray-300 hover:text-white transition-colors duration-200"
+              >
+                Forum
+              </Link>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (

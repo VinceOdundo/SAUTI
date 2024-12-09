@@ -25,9 +25,45 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin", "representative"],
       default: "user",
     },
+    county: {
+      type: String,
+      required: false,
+    },
+    constituency: {
+      type: String,
+      required: false,
+    },
+    ward: {
+      type: String,
+      required: false,
+    },
+    yob: {
+      type: Number,
+      required: false,
+      min: 1900,
+      max: new Date().getFullYear(),
+    },
+    phone: {
+      type: String,
+      required: false,
+      match: [/^\+254\d{9}$/, "Please provide valid Kenyan phone number"],
+    },
     isVerified: {
       type: Boolean,
       default: false,
+    },
+    verificationToken: String,
+    avatar: {
+      type: String,
+      default: "default-avatar.png",
+    },
+    phoneVerified: {
+      type: Boolean,
+      default: false,
+    },
+    phoneOTP: {
+      code: String,
+      expiresAt: Date,
     },
   },
   { timestamps: true }

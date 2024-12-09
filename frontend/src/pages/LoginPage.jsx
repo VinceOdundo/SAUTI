@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { login } from "../features/auth/authAPI";
+import AuthNav from "../components/AuthNav";
 
 const LoginPage = () => {
   const [credentials, setCredentials] = useState({
@@ -26,7 +27,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-800 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col justify-center bg-dark-800 py-12 px-4 sm:px-6 lg:px-8">
+      <AuthNav isAuthenticated={false} />
       <div className="max-w-md w-full space-y-8 bg-dark-700 p-8 rounded-xl border border-dark-600">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">

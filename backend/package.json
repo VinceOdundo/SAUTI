@@ -10,6 +10,8 @@
     "mongodb": "^6.11.0",
     "mongoose": "^8.8.4",
     "morgan": "^1.10.0",
+    "nodemailer": "^6.9.16",
+    "twilio": "^5.3.7",
     "winston": "^3.17.0"
   },
   "scripts": {

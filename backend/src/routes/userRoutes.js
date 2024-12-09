@@ -7,6 +7,14 @@ const {
   updateUserRole,
   deleteUser,
 } = require("../controllers/adminController");
+const {
+  updateUserProfile,
+  getUserProfile,
+} = require("../controllers/userController");
+
+// User routes
+router.patch("/profile", authenticateUser, updateUserProfile);
+router.get("/:userId", getUserProfile);
 
 // Admin only routes
 router.use(authenticateUser);
