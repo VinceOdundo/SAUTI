@@ -3,10 +3,12 @@ const { ROLES } = require("../middlewares/rbacMiddleware");
 
 const createDefaultAdmin = async () => {
   try {
-    const adminExists = await User.findOne({ role: ROLES.ADMIN });
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminExists = await User.findOne({
+      $or: [{ role: ROLES.ADMIN }, { email: adminEmail }],
+    });
 
     if (!adminExists) {
-      const adminEmail = process.env.ADMIN_EMAIL;
       const adminPassword = process.env.ADMIN_PASSWORD;
 
       await User.create({

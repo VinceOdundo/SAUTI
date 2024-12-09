@@ -481,9 +481,3 @@ exports.votePoll = async (req, res) => {
     });
   }
 };
-
-module.exports = {
-  createPost,
-  getPosts,
-  votePost,
-};

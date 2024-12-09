@@ -24,7 +24,7 @@ const RegisterPage = () => {
     e.preventDefault();
     const result = await dispatch(register(formData));
     if (!result.error) {
-      navigate("/complete-profile"); // Redirect to profile completion page
+      navigate("/complete-profile");
     }
   };
 

@@ -4,14 +4,18 @@ import { PollOption, MediaUpload, LocationPicker } from "./post-components";
 import { toast } from "react-hot-toast";
 
 const PostForm = ({ onPostCreated }) => {
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const [postType, setPostType] = useState("text");
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     media: { images: [], video: null },
     poll: { question: "", options: ["", ""] },
-    location: { county: "", constituency: "", ward: "" },
+    location: {
+      county: user?.county || "",
+      constituency: user?.constituency || "",
+      ward: user?.ward || "",
+    },
     tags: [],
   });
   const [loading, setLoading] = useState(false);
@@ -53,6 +57,16 @@ const PostForm = ({ onPostCreated }) => {
       setLoading(false);
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <p className="text-gray-500 text-center">
+          Please log in to create a post
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-dark-700 rounded-lg p-4 mb-6">

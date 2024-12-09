@@ -381,13 +381,3 @@ exports.getRepresentativeStats = async (req, res) => {
     });
   }
 };
-
-module.exports = {
-  registerRepresentative,
-  verifyRepresentative,
-  getRepresentative,
-  updateRepresentative,
-  followRepresentative,
-  unfollowRepresentative,
-  getRepresentativeStats,
-};
