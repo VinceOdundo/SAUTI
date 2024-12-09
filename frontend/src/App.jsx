@@ -1,81 +1,100 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Provider } from "react-redux";
-import store from "./redux/store";
-import MainLayout from "./components/layouts/MainLayout";
-import HomePage from "./pages/HomePage";
-import UserProfile from "./pages/UserProfile";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import MessagingPage from "./pages/MessagingPage";
-import RepresentativeDashboard from "./pages/RepresentativeDashboard";
-import FeedbackPage from "./pages/FeedbackPage";
-import CommunicationsPage from "./pages/CommunicationsPage.jsx";
-import AdminDashboard from "./pages/AdminDashboard";
-import UserManagement from "./pages/UserManagement";
+import HomePage from "./pages/HomePage";
+import DashboardPage from "./pages/DashboardPage";
+import OrganizationRegistrationPage from "./pages/OrganizationRegistrationPage";
+import RepresentativeRegistrationPage from "./pages/RepresentativeRegistrationPage";
+import OrganizationDashboardPage from "./pages/OrganizationDashboardPage";
+import RepresentativeDashboardPage from "./pages/RepresentativeDashboardPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import CitizenDashboardPage from "./pages/CitizenDashboardPage";
+import ForumPage from "./pages/ForumPage";
+import PostDetailPage from "./pages/PostDetailPage";
+import MessagesPage from "./pages/MessagesPage";
 import PrivateRoute from "./components/PrivateRoute";
-import { ROLES } from "./constants/roles";
-import { Toaster } from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <Toaster position="top-right" />
+    <Router>
+      <div className="App">
         <Routes>
+          <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-
-          {/* Protected Routes with MainLayout */}
           <Route
-            path="/*"
+            path="/dashboard"
             element={
               <PrivateRoute>
-                <MainLayout>
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/profile/:userId" element={<UserProfile />} />
-                    <Route path="/messages" element={<MessagingPage />} />
-
-                    {/* Representative Routes */}
-                    <Route
-                      path="/representative/*"
-                      element={
-                        <PrivateRoute roles={[ROLES.REPRESENTATIVE]}>
-                          <Routes>
-                            <Route
-                              path="dashboard"
-                              element={<RepresentativeDashboard />}
-                            />
-                            <Route path="feedback" element={<FeedbackPage />} />
-                            <Route
-                              path="communications"
-                              element={<CommunicationsPage />}
-                            />
-                          </Routes>
-                        </PrivateRoute>
-                      }
-                    />
-
-                    {/* Admin Routes */}
-                    <Route
-                      path="/admin/*"
-                      element={
-                        <PrivateRoute roles={[ROLES.ADMIN]}>
-                          <Routes>
-                            <Route path="/" element={<AdminDashboard />} />
-                            <Route path="users" element={<UserManagement />} />
-                          </Routes>
-                        </PrivateRoute>
-                      }
-                    />
-                  </Routes>
-                </MainLayout>
+                <DashboardPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/register-organization"
+            element={
+              <PrivateRoute>
+                <OrganizationRegistrationPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/register-representative"
+            element={
+              <PrivateRoute>
+                <RepresentativeRegistrationPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/organization-dashboard"
+            element={
+              <PrivateRoute>
+                <OrganizationDashboardPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/representative-dashboard"
+            element={
+              <PrivateRoute>
+                <RepresentativeDashboardPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard"
+            element={
+              <PrivateRoute>
+                <AdminDashboardPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/citizen-dashboard"
+            element={
+              <PrivateRoute>
+                <CitizenDashboardPage />
+              </PrivateRoute>
+            }
+          />
+          <Route path="/forum" element={<ForumPage />} />
+          <Route path="/forum/posts/:postId" element={<PostDetailPage />} />
+          <Route
+            path="/messages"
+            element={
+              <PrivateRoute>
+                <MessagesPage />
               </PrivateRoute>
             }
           />
         </Routes>
-      </Router>
-    </Provider>
+        <ToastContainer position="top-right" />
+      </div>
+    </Router>
   );
 }
 

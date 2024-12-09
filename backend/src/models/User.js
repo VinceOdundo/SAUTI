@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin", "representative"],
+      enum: ["user", "admin", "representative", "ngo", "cbo"],
       default: "user",
     },
     county: {
@@ -64,6 +64,28 @@ const userSchema = new mongoose.Schema(
     phoneOTP: {
       code: String,
       expiresAt: Date,
+    },
+    organizationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Organization",
+    },
+    idVerification: {
+      status: {
+        type: String,
+        enum: ["pending", "verified", "rejected"],
+        default: "pending",
+      },
+      documentUrl: String,
+      verifiedAt: Date,
+    },
+    representativeCredentials: {
+      position: String,
+      credentials: [String],
+      verificationStatus: {
+        type: String,
+        enum: ["pending", "verified", "rejected"],
+        default: "pending",
+      },
     },
   },
   { timestamps: true }

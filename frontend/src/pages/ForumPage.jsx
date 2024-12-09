@@ -1,93 +1,126 @@
-import { useState, useEffect, useCallback } from "react";
-import { useSelector } from "react-redux";
-import PostForm from "../components/PostForm";
-import Timeline from "../components/Timeline";
-import SuggestedProfiles from "../components/SuggestedProfiles";
-import { toast } from "react-hot-toast";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  forumStart,
+  forumSuccess,
+  forumFail,
+  setPosts,
+  setFilters,
+} from "../features/forum/forumSlice";
+import { getPosts } from "../features/forum/forumAPI";
+import PostCard from "../components/forum/PostCard";
+import ForumFilters from "../components/forum/ForumFilters";
+import CreatePostButton from "../components/forum/CreatePostButton";
+import Pagination from "../components/common/Pagination";
+import SearchBar from "../components/common/SearchBar";
+import LoadingSpinner from "../components/common/LoadingSpinner";
+import ErrorAlert from "../components/common/ErrorAlert";
 
 const ForumPage = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const { posts, loading, error, pagination, filters } = useSelector(
+    (state) => state.forum
+  );
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchPosts = useCallback(async (pageNum = 1) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `/api/forum/posts?page=${pageNum}&limit=10`
-      );
-      setPosts((prev) =>
-        pageNum === 1 ? response.data.posts : [...prev, ...response.data.posts]
-      );
-      setHasMore(response.data.currentPage < response.data.totalPages);
-    } catch (error) {
-      setError(error.response?.data?.message || "Error fetching posts");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  useEffect(() => {
+    fetchPosts();
+  }, [filters, pagination.currentPage]);
 
-  const handleSubmitPost = async (e) => {
-    e.preventDefault();
+  const fetchPosts = async () => {
     try {
-      const response = await axios.post("/api/forum/posts", newPost);
-      setPosts([response.data.post, ...posts]);
-      setNewPost({ title: "", content: "" });
+      dispatch(forumStart());
+      const data = await getPosts({
+        ...filters,
+        page: pagination.currentPage,
+        search: searchQuery,
+      });
+      dispatch(setPosts(data));
+      dispatch(forumSuccess());
     } catch (error) {
-      setError(error.response?.data?.message || "Error creating post");
+      dispatch(forumFail(error.response?.data?.message || error.message));
     }
   };
 
-  const handleVote = useCallback(async (postId, voteType) => {
-    try {
-      const response = await axios.post(`/api/forum/posts/${postId}/vote`, {
-        vote: voteType,
-      });
-      setPosts((prev) =>
-        prev.map((post) => (post._id === postId ? response.data.post : post))
-      );
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Error voting on post");
-    }
-  }, []);
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    dispatch(setFilters({ search: query }));
+  };
 
-  const handleScroll = useCallback(() => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop ===
-      document.documentElement.offsetHeight
-    ) {
-      if (hasMore && !loading) {
-        setPage((prev) => prev + 1);
-      }
-    }
-  }, [hasMore, loading]);
+  const handleFilterChange = (newFilters) => {
+    dispatch(setFilters(newFilters));
+  };
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  const handlePostClick = (postId) => {
+    navigate(`/forum/posts/${postId}`);
+  };
 
-  useEffect(() => {
-    fetchPosts(page);
-  }, [page, fetchPosts]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 p-4">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-12 gap-8">
-        <div className="col-span-8">
-          <PostForm
-            onPostCreated={(newPost) => setPosts([newPost, ...posts])}
-          />
-          <Timeline posts={posts} setPosts={setPosts} />
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Forum</h1>
+          {user && user.isVerified && <CreatePostButton />}
         </div>
 
-        <div className="col-span-4 space-y-6">
-          <SuggestedProfiles />
-          <RepresentativePosts />
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Filters sidebar */}
+          <div className="lg:col-span-1">
+            <ForumFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+            />
+          </div>
+
+          {/* Main content */}
+          <div className="lg:col-span-3">
+            <div className="mb-6">
+              <SearchBar
+                value={searchQuery}
+                onChange={handleSearch}
+                placeholder="Search posts..."
+              />
+            </div>
+
+            {error && <ErrorAlert message={error} className="mb-6" />}
+
+            {posts.length === 0 ? (
+              <div className="bg-white rounded-lg shadow p-6 text-center">
+                <p className="text-gray-500">No posts found</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {posts.map((post) => (
+                  <PostCard
+                    key={post._id}
+                    post={post}
+                    onClick={() => handlePostClick(post._id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {pagination.totalPages > 1 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={(page) => dispatch(setFilters({ page }))}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
