@@ -1,139 +1,176 @@
-import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
-import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-hot-toast";
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import {
+  Box,
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  CircularProgress,
+  Alert,
+} from "@mui/material";
+import {
+  PeopleOutline,
+  ReportProblemOutline,
+  BarChartOutline,
+  Settings,
+} from "@mui/icons-material";
+import { fetchAnalytics } from "../store/slices/adminSlice";
+
+const StatCard = ({ title, value, icon, loading, error, action }) => (
+  <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <CardContent sx={{ flexGrow: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        {icon}
+        <Typography variant="h6" component="div" sx={{ ml: 1 }}>
+          {title}
+        </Typography>
+      </Box>
+      {loading ? (
+        <CircularProgress size={24} />
+      ) : error ? (
+        <Typography color="error">{error}</Typography>
+      ) : (
+        <Typography variant="h4" component="div">
+          {value}
+        </Typography>
+      )}
+    </CardContent>
+    {action && (
+      <CardActions>
+        <Button size="small" component={RouterLink} to={action.to}>
+          {action.label}
+        </Button>
+      </CardActions>
+    )}
+  </Card>
+);
 
 const AdminDashboard = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0,
-  });
-  const { user: currentUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isAdmin } = useSelector((state) => state.auth.user || {});
+  const {
+    data: analytics,
+    loading,
+    error,
+  } = useSelector((state) => state.admin.analytics);
 
-  const fetchUsers = useCallback(
-    async (page = 1) => {
-      if (!currentUser?.isAdmin) {
-        setError("Unauthorized access");
-        return;
-      }
+  useEffect(() => {
+    if (!isAdmin) {
+      navigate("/");
+      return;
+    }
+    dispatch(fetchAnalytics({ period: "7d" }));
+  }, [dispatch, isAdmin, navigate]);
 
-      try {
-        setLoading(true);
-        const response = await axios.get("/api/users", {
-          params: { page, limit: pagination.limit },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "X-Admin-Action": "true",
-          },
-        });
-
-        setUsers(response.data.users);
-        setPagination({
-          ...pagination,
-          page,
-          total: response.data.total,
-        });
-      } catch (err) {
-        setError(err.response?.data?.message || "Error fetching users");
-        if (err.response?.status === 403) {
-          navigate("/login");
-        }
-      } finally {
-        setLoading(false);
-      }
+  const dashboardItems = [
+    {
+      title: "User Management",
+      icon: <PeopleOutline fontSize="large" />,
+      value: analytics?.totalUsers || 0,
+      action: { label: "Manage Users", to: "/admin/users" },
     },
-    [currentUser?.isAdmin, pagination.limit]
-  );
+    {
+      title: "Content Moderation",
+      icon: <ReportProblemOutline fontSize="large" />,
+      value: analytics?.pendingModeration || 0,
+      action: { label: "View Queue", to: "/admin/moderation" },
+    },
+    {
+      title: "Analytics",
+      icon: <BarChartOutline fontSize="large" />,
+      value: analytics?.totalInteractions || 0,
+      action: { label: "View Details", to: "/admin/analytics" },
+    },
+    {
+      title: "Settings",
+      icon: <Settings fontSize="large" />,
+      value: "System",
+      action: { label: "Configure", to: "/admin/settings" },
+    },
+  ];
 
-  const handleRoleUpdate = async (userId, newRole) => {
-    try {
-      await axios.patch(
-        `/api/users/${userId}/role`,
-        { role: newRole },
-        {
-          headers: {
-            "X-Admin-Action": "true",
-            "X-Action-Reason": "role_update",
-          },
-        }
-      );
-
-      // Optimistic update
-      setUsers((prev) =>
-        prev.map((user) =>
-          user._id === userId ? { ...user, role: newRole } : user
-        )
-      );
-
-      toast.success("Role updated successfully");
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Error updating user role");
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
-
-    try {
-      await axios.delete(`/api/users/${userId}`);
-      fetchUsers();
-    } catch (err) {
-      setError(err.response?.data?.message || "Error deleting user");
-    }
-  };
-
-  if (loading) return <div className="text-center mt-8">Loading...</div>;
-  if (error)
-    return <div className="text-red-500 text-center mt-8">{error}</div>;
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">User Management</h1>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-dark-700 rounded-lg overflow-hidden">
-          <thead className="bg-dark-600">
-            <tr>
-              <th className="px-6 py-3 text-left text-white">Name</th>
-              <th className="px-6 py-3 text-left text-white">Email</th>
-              <th className="px-6 py-3 text-left text-white">Role</th>
-              <th className="px-6 py-3 text-left text-white">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user._id} className="border-t border-dark-600">
-                <td className="px-6 py-4 text-gray-300">{user.name}</td>
-                <td className="px-6 py-4 text-gray-300">{user.email}</td>
-                <td className="px-6 py-4 text-gray-300">{user.role}</td>
-                <td className="px-6 py-4 space-x-2">
-                  <select
-                    className="bg-dark-600 text-white px-3 py-1 rounded"
-                    value={user.role}
-                    onChange={(e) => handleRoleUpdate(user._id, e.target.value)}
-                  >
-                    <option value="user">User</option>
-                    <option value="representative">Representative</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <button
-                    onClick={() => handleDeleteUser(user._id)}
-                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Admin Dashboard
+        </Typography>
+        <Typography color="text.secondary">
+          Welcome to the Sauti administration panel. Monitor and manage your
+          platform from here.
+        </Typography>
+      </Box>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 4 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Grid container spacing={3}>
+        {dashboardItems.map((item) => (
+          <Grid item xs={12} sm={6} md={3} key={item.title}>
+            <StatCard
+              title={item.title}
+              value={item.value}
+              icon={item.icon}
+              loading={loading}
+              error={error}
+              action={item.action}
+            />
+          </Grid>
+        ))}
+      </Grid>
+
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Quick Actions
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item>
+            <Button
+              variant="contained"
+              component={RouterLink}
+              to="/admin/users"
+              startIcon={<PeopleOutline />}
+            >
+              Manage Users
+            </Button>
+          </Grid>
+          <Grid item>
+            <Button
+              variant="contained"
+              component={RouterLink}
+              to="/admin/moderation"
+              startIcon={<ReportProblemOutline />}
+            >
+              Review Content
+            </Button>
+          </Grid>
+          <Grid item>
+            <Button
+              variant="contained"
+              component={RouterLink}
+              to="/admin/analytics"
+              startIcon={<BarChartOutline />}
+            >
+              View Analytics
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
+    </Container>
   );
 };
 

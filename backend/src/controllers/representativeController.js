@@ -1,383 +1,269 @@
 const Representative = require("../models/Representative");
 const User = require("../models/User");
-const { uploadToS3, deleteFromS3 } = require("../utils/s3Utils");
-const { sendVerificationEmail } = require("../services/emailService");
+const {
+  validateRepresentative,
+} = require("../validators/representativeValidator");
 
-exports.registerRepresentative = async (req, res) => {
+exports.registerRepresentative = async (req, res, next) => {
   try {
-    const {
-      position,
-      party,
-      county,
-      constituency,
-      ward,
-      bio,
-      officeContact,
-      socialMedia,
-      term,
-    } = req.body;
+    const { error } = validateRepresentative(req.body);
+    if (error) {
+      return res.sendError(error.details[0].message);
+    }
 
-    // Check if user is already a representative
-    const existingRep = await Representative.findOne({ user: req.user._id });
+    const existingRep = await Representative.findOne({ user: req.user.id });
     if (existingRep) {
-      return res.status(400).json({
-        message: "You are already registered as a representative",
-      });
+      return res.sendError("User is already a representative", 400);
     }
 
-    // Handle document uploads
-    if (!req.files?.idCard || !req.files?.certificate) {
-      return res.status(400).json({
-        message: "Both ID card and certificate are required",
-      });
-    }
-
-    // Upload documents to S3
-    const idCardUrl = await uploadToS3(
-      req.files.idCard[0],
-      `representatives/${req.user._id}/id-card`
-    );
-
-    const certificateUrl = await uploadToS3(
-      req.files.certificate[0],
-      `representatives/${req.user._id}/certificate`
-    );
-
-    // Upload additional documents if provided
-    const additionalDocs = [];
-    if (req.files.additionalDocs) {
-      for (const doc of req.files.additionalDocs) {
-        const url = await uploadToS3(
-          doc,
-          `representatives/${req.user._id}/additional/${doc.originalname}`
-        );
-        additionalDocs.push({
-          name: doc.originalname,
-          url,
-        });
-      }
-    }
-
-    // Create representative
-    const representative = await Representative.create({
-      user: req.user._id,
-      position,
-      party,
-      county,
-      constituency,
-      ward,
-      bio,
-      officeContact,
-      socialMedia,
-      term,
-      verificationDocuments: {
-        idCard: {
-          url: idCardUrl,
-        },
-        certificate: {
-          url: certificateUrl,
-        },
-        additionalDocs,
-      },
+    const representative = new Representative({
+      ...req.body,
+      user: req.user.id,
+      verificationStatus: "pending",
     });
-
-    // Update user's role
-    await User.findByIdAndUpdate(req.user._id, {
-      role: "representative",
-    });
-
-    // Send verification email to admin
-    await sendVerificationEmail(
-      process.env.ADMIN_EMAIL,
-      "New Representative Registration",
-      {
-        representativeName: req.user.name,
-        position,
-        county,
-      }
-    );
-
-    res.status(201).json({
-      message: "Representative registration submitted successfully",
-      representative,
-    });
-  } catch (error) {
-    console.error("Representative registration error:", error);
-    res.status(500).json({
-      message: "Error registering representative",
-      error: error.message,
-    });
-  }
-};
-
-exports.verifyRepresentative = async (req, res) => {
-  try {
-    const { representativeId } = req.params;
-    const { status, notes } = req.body;
-
-    const representative = await Representative.findById(representativeId);
-    if (!representative) {
-      return res.status(404).json({ message: "Representative not found" });
-    }
-
-    representative.verificationStatus = status;
-    if (notes) {
-      representative.verificationNotes = notes;
-    }
-
-    // Update document verification status if provided
-    if (req.body.documents) {
-      if (req.body.documents.idCard !== undefined) {
-        representative.verificationDocuments.idCard.verified =
-          req.body.documents.idCard;
-      }
-      if (req.body.documents.certificate !== undefined) {
-        representative.verificationDocuments.certificate.verified =
-          req.body.documents.certificate;
-      }
-      if (req.body.documents.additionalDocs) {
-        representative.verificationDocuments.additionalDocs.forEach(
-          (doc, i) => {
-            if (req.body.documents.additionalDocs[i] !== undefined) {
-              doc.verified = req.body.documents.additionalDocs[i];
-            }
-          }
-        );
-      }
-    }
-
-    // Set overall verification status based on document verification
-    representative.verified =
-      status === "verified" &&
-      representative.verificationDocuments.idCard.verified &&
-      representative.verificationDocuments.certificate.verified;
 
     await representative.save();
+    await User.findByIdAndUpdate(req.user.id, { role: "representative" });
+    await representative.populate("user", "name email avatar");
 
-    // Update user's verification status
-    await User.findByIdAndUpdate(representative.user, {
-      isVerified: representative.verified,
-    });
-
-    res.json({
-      message: `Representative ${status} successfully`,
+    res.sendSuccess(
       representative,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error verifying representative",
-      error: error.message,
-    });
+      "Representative profile created successfully"
+    );
+  } catch (err) {
+    next(err);
   }
 };
 
-exports.getRepresentative = async (req, res) => {
+exports.verifyRepresentative = async (req, res, next) => {
   try {
-    const { representativeId } = req.params;
-    const representative = await Representative.findById(representativeId)
-      .populate("user", "name email avatar")
-      .populate("followers", "name avatar")
-      .populate("following", "name avatar");
-
+    const representative = await Representative.findById(
+      req.params.representativeId
+    );
     if (!representative) {
-      return res.status(404).json({ message: "Representative not found" });
+      return res.sendError("Representative not found", 404);
     }
 
-    res.json({ representative });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error fetching representative",
-      error: error.message,
-    });
+    representative.verificationStatus = "verified";
+    await representative.save();
+
+    res.sendSuccess(representative, "Representative verified successfully");
+  } catch (err) {
+    next(err);
   }
 };
 
-exports.updateRepresentative = async (req, res) => {
+exports.getRepresentative = async (req, res, next) => {
   try {
-    const updates = req.body;
+    const representative = await Representative.findById(
+      req.params.representativeId
+    )
+      .populate("user", "name email avatar")
+      .populate({
+        path: "reviews",
+        populate: { path: "author", select: "name avatar" },
+      });
 
-    // Remove sensitive fields that shouldn't be updated directly
-    delete updates.verified;
-    delete updates.verificationStatus;
-    delete updates.verificationDocuments;
-    delete updates.user;
+    if (!representative) {
+      return res.sendError("Representative not found", 404);
+    }
+
+    res.sendSuccess(representative);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateRepresentative = async (req, res, next) => {
+  try {
+    const { error } = validateRepresentative(req.body);
+    if (error) {
+      return res.sendError(error.details[0].message);
+    }
 
     const representative = await Representative.findOneAndUpdate(
-      { user: req.user._id },
-      updates,
+      { _id: req.params.representativeId, user: req.user.id },
+      { $set: req.body },
       { new: true, runValidators: true }
-    );
+    ).populate("user", "name email avatar");
 
     if (!representative) {
-      return res.status(404).json({ message: "Representative not found" });
+      return res.sendError("Representative not found or unauthorized", 404);
     }
 
-    // Handle document updates if provided
-    if (req.files) {
-      const updatedDocs = {};
+    res.sendSuccess(
+      representative,
+      "Representative profile updated successfully"
+    );
+  } catch (err) {
+    next(err);
+  }
+};
 
-      if (req.files.idCard) {
-        // Delete old ID card if it exists
-        if (representative.verificationDocuments?.idCard?.url) {
-          await deleteFromS3(representative.verificationDocuments.idCard.url);
-        }
+exports.followRepresentative = async (req, res, next) => {
+  try {
+    const representative = await Representative.findById(
+      req.params.representativeId
+    );
+    if (!representative) {
+      return res.sendError("Representative not found", 404);
+    }
 
-        // Upload new ID card
-        const idCardUrl = await uploadToS3(
-          req.files.idCard[0],
-          `representatives/${req.user._id}/id-card`
-        );
-
-        representative.verificationDocuments.idCard = {
-          url: idCardUrl,
-          verified: false,
-        };
-        updatedDocs.idCard = true;
-      }
-
-      if (req.files.certificate) {
-        // Delete old certificate if it exists
-        if (representative.verificationDocuments?.certificate?.url) {
-          await deleteFromS3(
-            representative.verificationDocuments.certificate.url
-          );
-        }
-
-        // Upload new certificate
-        const certificateUrl = await uploadToS3(
-          req.files.certificate[0],
-          `representatives/${req.user._id}/certificate`
-        );
-
-        representative.verificationDocuments.certificate = {
-          url: certificateUrl,
-          verified: false,
-        };
-        updatedDocs.certificate = true;
-      }
-
-      if (req.files.additionalDocs) {
-        // Delete old additional docs
-        for (const doc of representative.verificationDocuments.additionalDocs) {
-          await deleteFromS3(doc.url);
-        }
-
-        // Upload new additional docs
-        const additionalDocs = [];
-        for (const doc of req.files.additionalDocs) {
-          const url = await uploadToS3(
-            doc,
-            `representatives/${req.user._id}/additional/${doc.originalname}`
-          );
-          additionalDocs.push({
-            name: doc.originalname,
-            url,
-            verified: false,
-          });
-        }
-
-        representative.verificationDocuments.additionalDocs = additionalDocs;
-        updatedDocs.additionalDocs = true;
-      }
-
-      // If any documents were updated, set verification status to pending
-      if (Object.keys(updatedDocs).length > 0) {
-        representative.verificationStatus = "pending";
-        representative.verified = false;
-        await User.findByIdAndUpdate(req.user._id, { isVerified: false });
-      }
-
+    if (!representative.followers.includes(req.user.id)) {
+      representative.followers.push(req.user.id);
       await representative.save();
     }
 
-    res.json({
-      message: "Representative updated successfully",
-      representative,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error updating representative",
-      error: error.message,
-    });
+    res.sendSuccess(representative, "Representative followed successfully");
+  } catch (err) {
+    next(err);
   }
 };
 
-exports.followRepresentative = async (req, res) => {
+exports.unfollowRepresentative = async (req, res, next) => {
   try {
-    const { representativeId } = req.params;
-    const representative = await Representative.findById(representativeId);
-
+    const representative = await Representative.findById(
+      req.params.representativeId
+    );
     if (!representative) {
-      return res.status(404).json({ message: "Representative not found" });
+      return res.sendError("Representative not found", 404);
     }
 
-    // Check if user is already following
-    if (representative.followers.includes(req.user._id)) {
-      return res.status(400).json({
-        message: "You are already following this representative",
-      });
-    }
-
-    representative.followers.push(req.user._id);
-    await representative.save();
-
-    res.json({
-      message: "Successfully followed representative",
-      representative,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error following representative",
-      error: error.message,
-    });
-  }
-};
-
-exports.unfollowRepresentative = async (req, res) => {
-  try {
-    const { representativeId } = req.params;
-    const representative = await Representative.findById(representativeId);
-
-    if (!representative) {
-      return res.status(404).json({ message: "Representative not found" });
-    }
-
-    // Remove user from followers
     representative.followers = representative.followers.filter(
-      (id) => id.toString() !== req.user._id.toString()
+      (id) => id.toString() !== req.user.id.toString()
     );
     await representative.save();
 
-    res.json({
-      message: "Successfully unfollowed representative",
-      representative,
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error unfollowing representative",
-      error: error.message,
-    });
+    res.sendSuccess(representative, "Representative unfollowed successfully");
+  } catch (err) {
+    next(err);
   }
 };
 
-exports.getRepresentativeStats = async (req, res) => {
+exports.getRepresentativeStats = async (req, res, next) => {
   try {
-    const representative = await Representative.findOne({ user: req.user._id });
+    const representative = await Representative.findOne({
+      user: req.user.id,
+    }).populate("followers");
+
     if (!representative) {
-      return res.status(404).json({ message: "Representative not found" });
+      return res.sendError("Representative profile not found", 404);
     }
 
-    await representative.updateStats();
+    const stats = {
+      followersCount: representative.followers.length,
+      reviewsCount: representative.reviews.length,
+      averageRating: representative.averageRating,
+    };
 
-    res.json({
-      stats: representative.stats,
-      followerCount: representative.followerCount,
-      followingCount: representative.followingCount,
+    res.sendSuccess(stats);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getRepresentatives = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = { verificationStatus: "verified" };
+
+    // Apply filters
+    if (req.query.county) query.county = req.query.county;
+    if (req.query.constituency) query.constituency = req.query.constituency;
+    if (req.query.ward) query.ward = req.query.ward;
+
+    const [representatives, total] = await Promise.all([
+      Representative.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("user", "name email avatar")
+        .lean(),
+      Representative.countDocuments(query),
+    ]);
+
+    res.sendSuccess({
+      representatives,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error fetching representative stats",
-      error: error.message,
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getRepresentativeProfile = async (req, res, next) => {
+  try {
+    const representative = await Representative.findById(req.params.id)
+      .populate("user", "name email avatar")
+      .populate({
+        path: "reviews",
+        populate: { path: "author", select: "name avatar" },
+      });
+
+    if (!representative) {
+      return res.sendError("Representative not found", 404);
+    }
+
+    res.sendSuccess(representative);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.addReview = async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body;
+
+    if (rating < 1 || rating > 5) {
+      return res.sendError("Rating must be between 1 and 5");
+    }
+
+    const representative = await Representative.findById(req.params.id);
+    if (!representative) {
+      return res.sendError("Representative not found", 404);
+    }
+
+    // Check if user has already reviewed
+    const existingReview = representative.reviews.find(
+      (review) => review.author.toString() === req.user.id
+    );
+
+    if (existingReview) {
+      return res.sendError(
+        "You have already reviewed this representative",
+        400
+      );
+    }
+
+    representative.reviews.push({
+      author: req.user.id,
+      rating,
+      comment,
     });
+
+    // Update average rating
+    const totalRating = representative.reviews.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    representative.averageRating = totalRating / representative.reviews.length;
+
+    await representative.save();
+    await representative.populate({
+      path: "reviews.author",
+      select: "name avatar",
+    });
+
+    res.sendSuccess(representative, "Review added successfully");
+  } catch (err) {
+    next(err);
   }
 };

@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { register, login, updateProfile, getCurrentUser } from "./authAPI";
 
 const initialState = {
   user: null,
@@ -12,33 +13,51 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    authStart: (state) => {
-      state.loading = true;
-      state.error = null;
-    },
-    authSuccess: (state, action) => {
-      state.loading = false;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
-      state.isAuthenticated = true;
-      state.error = null;
-    },
-    authFail: (state, action) => {
-      state.loading = false;
-      state.error = action.payload;
-      state.isAuthenticated = false;
-    },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      localStorage.removeItem("token");
     },
-    updateUser: (state, action) => {
-      state.user = { ...state.user, ...action.payload };
+    authSuccess: (state, action) => {
+      state.loading = false;
+      state.isAuthenticated = true;
+      state.user = action.payload.user;
+      state.token = action.payload.token;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Register cases
+      .addCase(register.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.isAuthenticated = true;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Registration failed";
+      })
+      // Update profile cases
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload.user;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Profile update failed";
+      });
   },
 });
 
-export const { authStart, authSuccess, authFail, logout, updateUser } =
-  authSlice.actions;
+export const { logout, authSuccess } = authSlice.actions;
 export default authSlice.reducer;

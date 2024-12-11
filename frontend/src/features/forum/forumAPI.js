@@ -2,14 +2,46 @@ import axios from "axios";
 import { API_URL } from "../../config";
 
 const API = axios.create({
-  baseURL: `${API_URL}/forum`,
+  baseURL: `${API_URL}/api/forum`,
   withCredentials: true,
+});
+
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  console.log("Token in interceptor:", token); // Debug log
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  console.log("Final headers:", config.headers); // Debug log
+  return config;
 });
 
 // Create a new post
 export const createPost = async (formData) => {
-  const response = await API.post("/posts", formData);
-  return response.data;
+  try {
+    const token = localStorage.getItem("token");
+    console.log("Token in createPost:", token); // Debug log
+
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await API.post("/posts", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Post creation error details:", {
+      error: error.response?.data || error,
+      status: error.response?.status,
+      headers: error.response?.headers,
+    });
+    throw error.response?.data || error;
+  }
 };
 
 // Get posts with filters and pagination
@@ -26,7 +58,11 @@ export const getPost = async (postId) => {
 
 // Update a post
 export const updatePost = async (postId, formData) => {
-  const response = await API.patch(`/posts/${postId}`, formData);
+  const response = await API.patch(`/posts/${postId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
@@ -79,5 +115,34 @@ export const votePoll = async (postId, optionIndex) => {
   const response = await API.post(`/posts/${postId}/poll/vote`, {
     optionIndex,
   });
+  return response.data;
+};
+
+// Reshare a post
+export const resharePost = async (postId, commentary) => {
+  const response = await API.post(`/posts/${postId}/reshare`, { commentary });
+  return response.data;
+};
+
+// Search posts
+export const searchPosts = async (query) => {
+  const response = await API.get("/posts", {
+    params: {
+      search: query,
+      sort: "relevance",
+    },
+  });
+  return response.data;
+};
+
+// Get trending hashtags
+export const getTrendingHashtags = async () => {
+  const response = await API.get("/posts/trending-hashtags");
+  return response.data;
+};
+
+// Get post analytics (for representatives)
+export const getPostAnalytics = async (postId) => {
+  const response = await API.get(`/posts/${postId}/analytics`);
   return response.data;
 };

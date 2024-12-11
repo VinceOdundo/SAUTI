@@ -1,32 +1,33 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { registerOrganization } from "../../features/organization/organizationAPI";
-import { toast } from "react-toastify";
+import LocationPicker from "../post-components/LocationPicker";
+import LoadingSpinner from "../common/LoadingSpinner";
 
 const OrganizationRegistrationForm = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading } = useSelector((state) => state.organization);
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
-    type: "NGO",
+    type: "",
     registrationNumber: "",
-    contactEmail: "",
-    contactPhone: "",
-    address: {
-      street: "",
-      city: "",
-      county: "",
-    },
     description: "",
-    website: "",
+    contact: {
+      email: "",
+      phone: "",
+      address: "",
+    },
+    focus: [],
+    location: {
+      county: "",
+      constituency: "",
+      ward: "",
+    },
+    certificate: null,
   });
 
-  const [certificate, setCertificate] = useState(null);
-
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name.includes(".")) {
       const [parent, child] = name.split(".");
@@ -40,164 +41,223 @@ const OrganizationRegistrationForm = () => {
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type === "application/pdf") {
-      setCertificate(file);
-    } else {
-      toast.error("Please upload a PDF file");
-    }
+    setFormData((prev) => ({
+      ...prev,
+      certificate: e.target.files[0],
+    }));
+  };
+
+  const handleLocationChange = (location) => {
+    setFormData((prev) => ({
+      ...prev,
+      location,
+    }));
+  };
+
+  const handleFocusChange = (e) => {
+    const { value, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      focus: checked
+        ? [...prev.focus, value]
+        : prev.focus.filter((item) => item !== value),
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!certificate) {
-      toast.error("Please upload registration certificate");
-      return;
-    }
-
-    const formDataToSend = new FormData();
-    Object.keys(formData).forEach((key) => {
-      if (typeof formData[key] === "object" && !Array.isArray(formData[key])) {
-        Object.keys(formData[key]).forEach((subKey) => {
-          formDataToSend.append(`${key}.${subKey}`, formData[key][subKey]);
-        });
-      } else {
-        formDataToSend.append(key, formData[key]);
-      }
-    });
-    formDataToSend.append("certificate", certificate);
+    setLoading(true);
+    setError("");
 
     try {
-      await dispatch(registerOrganization(formDataToSend)).unwrap();
-      toast.success("Organization registered successfully");
-      navigate("/dashboard");
-    } catch (error) {
-      toast.error(error.message || "Registration failed");
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "contact" || key === "location") {
+          data.append(key, JSON.stringify(value));
+        } else if (key === "focus") {
+          data.append(key, JSON.stringify(value));
+        } else if (key === "certificate" && value) {
+          data.append("certificate", value);
+        } else {
+          data.append(key, value);
+        }
+      });
+
+      await registerOrganization(data);
+      navigate("/organization/pending");
+    } catch (err) {
+      setError(err.message || "Failed to register organization");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const organizationTypes = [
+    "NGO",
+    "CBO",
+    "Faith Based",
+    "Government Agency",
+    "Private Company",
+    "Other",
+  ];
+
+  const focusAreas = [
+    "Education",
+    "Health",
+    "Environment",
+    "Human Rights",
+    "Economic Empowerment",
+    "Youth Development",
+    "Women Empowerment",
+    "Agriculture",
+    "Technology",
+    "Other",
+  ];
+
+  if (loading) return <LoadingSpinner />;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md"
-    >
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        Register Organization
-      </h2>
-
-      <div className="grid grid-cols-1 gap-6">
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6">Register Organization</h2>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Organization Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Organization Name
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Organization Type
+              </label>
+              <select
+                name="type"
+                value={formData.type}
+                onChange={handleInputChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              >
+                <option value="">Select Type</option>
+                {organizationTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Registration Number
+              </label>
+              <input
+                type="text"
+                name="registrationNumber"
+                value={formData.registrationNumber}
+                onChange={handleInputChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Contact Information</h3>
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                type="email"
+                name="contact.email"
+                value={formData.contact.email}
+                onChange={handleInputChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Phone
+              </label>
+              <input
+                type="tel"
+                name="contact.phone"
+                value={formData.contact.phone}
+                onChange={handleInputChange}
+                required
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Address
+              </label>
+              <textarea
+                name="contact.address"
+                value={formData.contact.address}
+                onChange={handleInputChange}
+                required
+                rows={3}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Location */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Location</h3>
+          <LocationPicker
+            location={formData.location}
+            onChange={handleLocationChange}
           />
         </div>
 
+        {/* Focus Areas */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Type
-          </label>
-          <select
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          >
-            <option value="NGO">NGO</option>
-            <option value="CBO">CBO</option>
-          </select>
+          <h3 className="text-lg font-semibold mb-4">Focus Areas</h3>
+          <div className="grid grid-cols-2 gap-4">
+            {focusAreas.map((area) => (
+              <div key={area} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={area}
+                  value={area}
+                  checked={formData.focus.includes(area)}
+                  onChange={handleFocusChange}
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor={area}
+                  className="ml-2 block text-sm text-gray-700"
+                >
+                  {area}
+                </label>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Registration Number
-          </label>
-          <input
-            type="text"
-            name="registrationNumber"
-            value={formData.registrationNumber}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Contact Email
-          </label>
-          <input
-            type="email"
-            name="contactEmail"
-            value={formData.contactEmail}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Contact Phone
-          </label>
-          <input
-            type="tel"
-            name="contactPhone"
-            value={formData.contactPhone}
-            onChange={handleChange}
-            placeholder="+254XXXXXXXXX"
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Street Address
-          </label>
-          <input
-            type="text"
-            name="address.street"
-            value={formData.address.street}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            City
-          </label>
-          <input
-            type="text"
-            name="address.city"
-            value={formData.address.city}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            County
-          </label>
-          <input
-            type="text"
-            name="address.county"
-            value={formData.address.county}
-            onChange={handleChange}
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
+        {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Description
@@ -205,48 +265,42 @@ const OrganizationRegistrationForm = () => {
           <textarea
             name="description"
             value={formData.description}
-            onChange={handleChange}
+            onChange={handleInputChange}
             required
             rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
           />
         </div>
 
+        {/* Certificate Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Website
-          </label>
-          <input
-            type="url"
-            name="website"
-            value={formData.website}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Registration Certificate (PDF)
+            Registration Certificate
           </label>
           <input
             type="file"
-            accept=".pdf"
+            accept=".pdf,.jpg,.jpeg,.png"
             onChange={handleFileChange}
             required
-            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+            className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
           />
+          <p className="mt-1 text-sm text-gray-500">
+            Upload your organization's registration certificate (PDF, JPG, PNG)
+          </p>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-        >
-          {loading ? "Registering..." : "Register Organization"}
-        </button>
-      </div>
-    </form>
+        {/* Submit Button */}
+        <div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-gray-400"
+          >
+            {loading ? "Registering..." : "Register Organization"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 };
 

@@ -1,21 +1,11 @@
 const Organization = require("../models/Organization");
 const User = require("../models/User");
-const { uploadToS3, deleteFromS3 } = require("../utils/s3Utils");
-const { sendVerificationEmail } = require("../services/emailService");
+const path = require("path");
 
-exports.registerOrganization = async (req, res) => {
+const registerOrganization = async (req, res) => {
   try {
-    const {
-      name,
-      type,
-      registrationNumber,
-      contact,
-      areas,
-      focus,
-      description,
-      website,
-      socialMedia,
-    } = req.body;
+    const { name, type, registrationNumber, description, contact, focus } =
+      req.body;
 
     // Check if organization already exists
     const existingOrg = await Organization.findOne({ registrationNumber });
@@ -26,58 +16,35 @@ exports.registerOrganization = async (req, res) => {
     }
 
     // Handle certificate upload
-    if (!req.file) {
-      return res.status(400).json({
-        message: "Registration certificate is required",
-      });
+    let certificateUrl;
+    if (req.file) {
+      certificateUrl = `/uploads/${req.file.filename}`;
     }
 
-    // Upload certificate to S3
-    const certificateUrl = await uploadToS3(
-      req.file,
-      `organizations/${registrationNumber}/certificate`
-    );
-
     // Create organization
-    const organization = await Organization.create({
+    const organization = new Organization({
       name,
       type,
       registrationNumber,
+      description,
+      contact,
+      focus,
+      representatives: [{ user: req.user._id, role: "admin" }],
       verificationDocuments: {
         certificate: {
           url: certificateUrl,
+          verified: false,
         },
       },
-      contact,
-      representatives: [
-        {
-          user: req.user._id,
-          role: "admin",
-        },
-      ],
-      areas,
-      focus,
-      description,
-      website,
-      socialMedia,
     });
+
+    await organization.save();
 
     // Update user's role and organization
     await User.findByIdAndUpdate(req.user._id, {
       role: type.toLowerCase(),
       organizationId: organization._id,
     });
-
-    // Send verification email to admin
-    await sendVerificationEmail(
-      process.env.ADMIN_EMAIL,
-      "New Organization Registration",
-      {
-        organizationName: name,
-        registrationNumber,
-        type,
-      }
-    );
 
     res.status(201).json({
       message: "Organization registered successfully",
@@ -92,7 +59,7 @@ exports.registerOrganization = async (req, res) => {
   }
 };
 
-exports.verifyOrganization = async (req, res) => {
+const verifyOrganization = async (req, res) => {
   try {
     const { organizationId } = req.params;
     const { verified, notes } = req.body;
@@ -129,7 +96,7 @@ exports.verifyOrganization = async (req, res) => {
   }
 };
 
-exports.getOrganization = async (req, res) => {
+const getOrganization = async (req, res) => {
   try {
     const { organizationId } = req.params;
     const organization = await Organization.findById(organizationId).populate(
@@ -150,7 +117,7 @@ exports.getOrganization = async (req, res) => {
   }
 };
 
-exports.updateOrganization = async (req, res) => {
+const updateOrganization = async (req, res) => {
   try {
     const { organizationId } = req.params;
     const updates = req.body;
@@ -160,11 +127,10 @@ exports.updateOrganization = async (req, res) => {
     delete updates.verificationDocuments;
     delete updates.representatives;
 
-    const organization = await Organization.findOneAndUpdate(
-      { _id: organizationId, "representatives.user": req.user._id },
-      updates,
-      { new: true, runValidators: true }
-    );
+    const organization = await Organization.findOne({
+      _id: organizationId,
+      "representatives.user": req.user._id,
+    });
 
     if (!organization) {
       return res.status(404).json({
@@ -173,26 +139,17 @@ exports.updateOrganization = async (req, res) => {
       });
     }
 
-    // Handle certificate update if provided
+    // Handle certificate update
     if (req.file) {
-      // Delete old certificate if it exists
-      if (organization.verificationDocuments?.certificate?.url) {
-        await deleteFromS3(organization.verificationDocuments.certificate.url);
-      }
-
-      // Upload new certificate
-      const certificateUrl = await uploadToS3(
-        req.file,
-        `organizations/${organization.registrationNumber}/certificate`
-      );
-
       organization.verificationDocuments.certificate = {
-        url: certificateUrl,
+        url: `/uploads/${req.file.filename}`,
         verified: false,
       };
-      organization.verified = false;
-      await organization.save();
     }
+
+    // Update other fields
+    Object.assign(organization, updates);
+    await organization.save();
 
     res.json({
       message: "Organization updated successfully",
@@ -206,7 +163,7 @@ exports.updateOrganization = async (req, res) => {
   }
 };
 
-exports.addRepresentative = async (req, res) => {
+const addRepresentative = async (req, res) => {
   try {
     const { organizationId } = req.params;
     const { userId, role, title } = req.body;
@@ -250,4 +207,12 @@ exports.addRepresentative = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+module.exports = {
+  registerOrganization,
+  verifyOrganization,
+  getOrganization,
+  updateOrganization,
+  addRepresentative,
 };

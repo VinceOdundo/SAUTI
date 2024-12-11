@@ -1,101 +1,55 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import HomePage from "./pages/HomePage";
-import DashboardPage from "./pages/DashboardPage";
-import OrganizationRegistrationPage from "./pages/OrganizationRegistrationPage";
-import RepresentativeRegistrationPage from "./pages/RepresentativeRegistrationPage";
-import OrganizationDashboardPage from "./pages/OrganizationDashboardPage";
-import RepresentativeDashboardPage from "./pages/RepresentativeDashboardPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import CitizenDashboardPage from "./pages/CitizenDashboardPage";
-import ForumPage from "./pages/ForumPage";
-import PostDetailPage from "./pages/PostDetailPage";
-import MessagesPage from "./pages/MessagesPage";
-import PrivateRoute from "./components/PrivateRoute";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { ToastProvider } from "./contexts/ToastContext";
+import { SocketProvider } from "./contexts/SocketContext";
+import LoginPage from "./components/auth/LoginPage";
+import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
+import ResetPasswordPage from "./components/auth/ResetPasswordPage";
+import EmailVerificationPage from "./components/auth/EmailVerificationPage";
+import ProfileWizard from "./components/profile/ProfileWizard";
+import UserDashboard from "./components/dashboard/UserDashboard";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
-function App() {
+const App = () => {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <DashboardPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/register-organization"
-            element={
-              <PrivateRoute>
-                <OrganizationRegistrationPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/register-representative"
-            element={
-              <PrivateRoute>
-                <RepresentativeRegistrationPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/organization-dashboard"
-            element={
-              <PrivateRoute>
-                <OrganizationDashboardPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/representative-dashboard"
-            element={
-              <PrivateRoute>
-                <RepresentativeDashboardPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/admin-dashboard"
-            element={
-              <PrivateRoute>
-                <AdminDashboardPage />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/citizen-dashboard"
-            element={
-              <PrivateRoute>
-                <CitizenDashboardPage />
-              </PrivateRoute>
-            }
-          />
-          <Route path="/forum" element={<ForumPage />} />
-          <Route path="/forum/posts/:postId" element={<PostDetailPage />} />
-          <Route
-            path="/messages"
-            element={
-              <PrivateRoute>
-                <MessagesPage />
-              </PrivateRoute>
-            }
-          />
-        </Routes>
-        <ToastContainer position="top-right" />
-      </div>
+      <ToastProvider>
+        <SocketProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route
+              path="/reset-password/:token"
+              element={<ResetPasswordPage />}
+            />
+            <Route
+              path="/verify-email/:token"
+              element={<EmailVerificationPage />}
+            />
+
+            {/* Protected Routes */}
+            <Route
+              path="/complete-profile"
+              element={
+                <ProtectedRoute>
+                  <ProfileWizard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </SocketProvider>
+      </ToastProvider>
     </Router>
   );
-}
+};
 
 export default App;

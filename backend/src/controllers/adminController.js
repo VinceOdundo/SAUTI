@@ -5,8 +5,56 @@ const Post = require("../models/Post");
 const Message = require("../models/Message");
 const Report = require("../models/Report");
 
+// Get all users
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json({ users });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update user role
+const updateUserRole = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Delete user
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Get admin dashboard stats
-exports.getStats = async (req, res) => {
+const getStats = async (req, res) => {
   try {
     const [
       userStats,
@@ -120,9 +168,9 @@ exports.getStats = async (req, res) => {
 };
 
 // Get activity trends
-exports.getActivityTrends = async (req, res) => {
+const getActivityTrends = async (req, res) => {
   try {
-    const { timeRange } = req.query;
+    const { timeRange = "week" } = req.query;
     const now = new Date();
     let startDate;
 
@@ -143,9 +191,7 @@ exports.getActivityTrends = async (req, res) => {
     const [userActivity, postActivity, messageActivity] = await Promise.all([
       User.aggregate([
         {
-          $match: {
-            createdAt: { $gte: startDate },
-          },
+          $match: { createdAt: { $gte: startDate } },
         },
         {
           $group: {
@@ -162,9 +208,7 @@ exports.getActivityTrends = async (req, res) => {
       ]),
       Post.aggregate([
         {
-          $match: {
-            createdAt: { $gte: startDate },
-          },
+          $match: { createdAt: { $gte: startDate } },
         },
         {
           $group: {
@@ -181,9 +225,7 @@ exports.getActivityTrends = async (req, res) => {
       ]),
       Message.aggregate([
         {
-          $match: {
-            createdAt: { $gte: startDate },
-          },
+          $match: { createdAt: { $gte: startDate } },
         },
         {
           $group: {
@@ -211,7 +253,7 @@ exports.getActivityTrends = async (req, res) => {
 };
 
 // Get verification requests
-exports.getVerificationRequests = async (req, res) => {
+const getVerificationRequests = async (req, res) => {
   try {
     const { type = "all", status = "pending" } = req.query;
     const query = { status };
@@ -248,7 +290,7 @@ exports.getVerificationRequests = async (req, res) => {
 };
 
 // Verify document
-exports.verifyDocument = async (req, res) => {
+const verifyDocument = async (req, res) => {
   try {
     const { requestId, documentName, verified } = req.body;
     const { type } = req.query;
@@ -279,7 +321,7 @@ exports.verifyDocument = async (req, res) => {
 };
 
 // Get reported content
-exports.getReportedContent = async (req, res) => {
+const getReportedContent = async (req, res) => {
   try {
     const { type = "all", status = "pending" } = req.query;
     const query = { status };
@@ -321,8 +363,8 @@ exports.getReportedContent = async (req, res) => {
   }
 };
 
-// Moderate reported content
-exports.moderateContent = async (req, res) => {
+// Moderate content
+const moderateContent = async (req, res) => {
   try {
     const { reportId, action } = req.body;
 
@@ -359,7 +401,7 @@ exports.moderateContent = async (req, res) => {
 };
 
 // Get users for management
-exports.getUsers = async (req, res) => {
+const getUsers = async (req, res) => {
   try {
     const {
       role = "all",
@@ -391,7 +433,7 @@ exports.getUsers = async (req, res) => {
 };
 
 // Manage user
-exports.manageUser = async (req, res) => {
+const manageUser = async (req, res) => {
   try {
     const { userId, action } = req.body;
 
@@ -423,36 +465,16 @@ exports.manageUser = async (req, res) => {
   }
 };
 
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find()
-      .select("-password")
-      .populate("organization", "name");
-    res.json({ users });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-exports.updateUserRole = async (req, res) => {
-  try {
-    const { role } = req.body;
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { role },
-      { new: true }
-    ).select("-password");
-    res.json({ user });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-exports.deleteUser = async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+module.exports = {
+  getAllUsers,
+  updateUserRole,
+  deleteUser,
+  getStats,
+  getActivityTrends,
+  getVerificationRequests,
+  verifyDocument,
+  getReportedContent,
+  moderateContent,
+  getUsers,
+  manageUser,
 };

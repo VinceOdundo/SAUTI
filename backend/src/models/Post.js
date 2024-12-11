@@ -211,6 +211,37 @@ const postSchema = new mongoose.Schema(
         },
       ],
     },
+    editHistory: [
+      {
+        editedAt: {
+          type: Date,
+          required: true,
+        },
+        editor: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+      },
+    ],
+    reshares: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        commentary: String,
+        resharedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    originalPost: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+    },
   },
   {
     timestamps: true,
@@ -269,6 +300,22 @@ postSchema.methods.hasUserReported = function (userId) {
     (report) => report.user.toString() === userId.toString()
   );
 };
+
+// Virtual for reshare count
+postSchema.virtual("reshareCount").get(function () {
+  return this.reshares.length;
+});
+
+// Method to check if post is edited
+postSchema.virtual("isEdited").get(function () {
+  return this.editHistory.length > 0;
+});
+
+// Method to get last edit timestamp
+postSchema.virtual("lastEditedAt").get(function () {
+  if (this.editHistory.length === 0) return null;
+  return this.editHistory[this.editHistory.length - 1].editedAt;
+});
 
 // Indexes for efficient querying
 postSchema.index({ author: 1, createdAt: -1 });

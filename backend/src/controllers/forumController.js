@@ -1,159 +1,157 @@
 const Post = require("../models/Post");
-const { uploadToS3 } = require("../utils/s3Utils");
+const Comment = require("../models/Comment");
+const path = require("path");
+const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
+const { validatePost } = require("../validators/postValidator");
+const { handleError } = require("../utils/errorHandler");
+const { uploadToStorage } = require("../utils/fileUpload");
+
+// Configure multer for media uploads
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    files: 4, // Max 4 files per post
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "video/mp4"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          "Invalid file type. Only JPEG, PNG, GIF, and MP4 are allowed."
+        )
+      );
+    }
+  },
+}).array("media", 4);
 
 // Create a new post
-exports.createPost = async (req, res) => {
+exports.createPost = async (req, res, next) => {
   try {
-    const { title, content, category, tags, location, poll, visibility } =
-      req.body;
-
-    // Verify user is allowed to post
-    if (!req.user.isVerified) {
-      return res.status(403).json({
-        message: "Account must be verified to create posts",
-      });
+    // Validate post data
+    const validationError = validatePost(req.body);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
     }
 
-    // Handle media uploads
-    const media = {
-      images: [],
-      videos: [],
-      documents: [],
-    };
-
-    if (req.files) {
-      // Handle image uploads
-      if (req.files.images) {
-        for (const image of req.files.images) {
-          const url = await uploadToS3(
-            image,
-            `posts/${req.user._id}/images/${Date.now()}`
-          );
-          media.images.push({
-            url,
-            caption: image.originalname,
-          });
-        }
-      }
-
-      // Handle video uploads
-      if (req.files.videos) {
-        for (const video of req.files.videos) {
-          const url = await uploadToS3(
-            video,
-            `posts/${req.user._id}/videos/${Date.now()}`
-          );
-          media.videos.push({
-            url,
-            caption: video.originalname,
-            duration: 0, // TODO: Extract video duration
-          });
-        }
-      }
-
-      // Handle document uploads
-      if (req.files.documents) {
-        for (const doc of req.files.documents) {
-          const url = await uploadToS3(
-            doc,
-            `posts/${req.user._id}/documents/${Date.now()}`
-          );
-          media.documents.push({
-            url,
-            name: doc.originalname,
-            type: doc.mimetype,
-            size: doc.size,
-          });
-        }
+    // Handle media uploads if any
+    const mediaUrls = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const fileName = `${uuidv4()}${path.extname(file.originalname)}`;
+        const url = await uploadToStorage(file.buffer, fileName, file.mimetype);
+        mediaUrls.push({ url, type: file.mimetype });
       }
     }
 
     const post = new Post({
-      author: req.user._id,
-      title,
-      content,
-      category,
-      tags: tags ? JSON.parse(tags) : [],
-      location,
-      media,
-      poll: poll ? JSON.parse(poll) : null,
-      visibility,
+      ...req.body,
+      author: req.user.id,
+      media: mediaUrls,
+      analytics: {
+        views: 0,
+        uniqueViewers: [],
+        engagement: {
+          shares: 0,
+          comments: 0,
+          reactions: {},
+        },
+      },
     });
 
     await post.save();
-    await post.populate("author", "name avatar");
+    await post.populate([
+      { path: "author", select: "name avatar" },
+      { path: "category", select: "name" },
+    ]);
 
-    res.status(201).json({ post });
-  } catch (error) {
-    console.error("Post creation error:", error);
-    res.status(500).json({
-      message: "Error creating post",
-      error: error.message,
+    // Track user activity
+    await updateUserActivity(req.user.id, "post_created");
+
+    res.status(201).json({
+      success: true,
+      message: "Post created successfully",
+      post,
     });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
 // Get posts with filters and pagination
-exports.getPosts = async (req, res) => {
+exports.getPosts = async (req, res, next) => {
   try {
-    const {
-      category,
-      tags,
-      location,
-      visibility,
-      sort = "recent",
-      page = 1,
-      limit = 10,
-      search,
-    } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
 
+    // Build query based on filters
     const query = { status: "published" };
-
-    // Apply filters
-    if (category) query.category = category;
-    if (tags) query.tags = { $in: tags.split(",") };
-    if (location) {
-      if (location.county) query["location.county"] = location.county;
-      if (location.constituency)
-        query["location.constituency"] = location.constituency;
-      if (location.ward) query["location.ward"] = location.ward;
-    }
-    if (visibility) query.visibility = visibility;
-
-    // Apply text search
-    if (search) {
-      query.$text = { $search: search };
+    if (req.query.category) query.category = req.query.category;
+    if (req.query.author) query.author = req.query.author;
+    if (req.query.tag) query.tags = req.query.tag;
+    if (req.query.search) {
+      query.$or = [
+        { title: { $regex: req.query.search, $options: "i" } },
+        { content: { $regex: req.query.search, $options: "i" } },
+      ];
     }
 
-    // Apply sorting
-    const sortOptions = {
-      recent: { createdAt: -1 },
-      popular: { "analytics.views": -1 },
-      trending: { voteCount: -1 },
-      commented: { commentCount: -1 },
-    };
+    // Add date range filter if provided
+    if (req.query.startDate && req.query.endDate) {
+      query.createdAt = {
+        $gte: new Date(req.query.startDate),
+        $lte: new Date(req.query.endDate),
+      };
+    }
 
-    const posts = await Post.find(query)
-      .sort(sortOptions[sort])
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("author", "name avatar")
-      .populate("votes.upvotes", "name avatar")
-      .populate("votes.downvotes", "name avatar");
+    const [posts, total] = await Promise.all([
+      Post.find(query)
+        .sort(req.query.sort || { createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .populate("author", "name avatar")
+        .populate("category", "name")
+        .populate({
+          path: "comments",
+          options: { limit: 2, sort: { createdAt: -1 } },
+          populate: { path: "author", select: "name avatar" },
+        }),
+      Post.countDocuments(query),
+    ]);
 
-    const total = await Post.countDocuments(query);
+    // Enhance posts with engagement metrics
+    const enhancedPosts = posts.map((post) => ({
+      ...post.toObject(),
+      engagement: {
+        upvoteCount: post.votes.upvotes.length,
+        downvoteCount: post.votes.downvotes.length,
+        commentCount: post.comments.length,
+        shareCount: post.reshares.length,
+      },
+      userInteraction: {
+        hasVoted: post.getUserVote(req.user._id),
+        hasCommented: post.hasUserCommented(req.user._id),
+        hasShared: post.hasUserReshared(req.user._id),
+      },
+    }));
 
     res.json({
-      posts,
-      totalPages: Math.ceil(total / limit),
-      currentPage: parseInt(page),
-      total,
+      success: true,
+      posts: enhancedPosts,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error fetching posts",
-      error: error.message,
-    });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
@@ -161,8 +159,12 @@ exports.getPosts = async (req, res) => {
 exports.getPost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.postId)
-      .populate("author", "name avatar")
-      .populate("comments.author", "name avatar")
+      .populate("author", "name avatar bio")
+      .populate("category", "name")
+      .populate({
+        path: "comments",
+        populate: { path: "author", select: "name avatar" },
+      })
       .populate("votes.upvotes", "name avatar")
       .populate("votes.downvotes", "name avatar");
 
@@ -170,19 +172,37 @@ exports.getPost = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // Increment view count and add unique viewer
-    if (!post.analytics.uniqueViewers.includes(req.user._id)) {
+    // Track view and analytics
+    const isNewView = !post.analytics.uniqueViewers.includes(req.user._id);
+    if (isNewView) {
       post.analytics.views += 1;
       post.analytics.uniqueViewers.push(req.user._id);
+
+      // Update engagement metrics
+      const currentHour = new Date().getHours();
+      post.analytics.viewsByHour =
+        post.analytics.viewsByHour || new Array(24).fill(0);
+      post.analytics.viewsByHour[currentHour]++;
+
       await post.save();
     }
 
-    res.json({ post });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error fetching post",
-      error: error.message,
+    // Enhance post with user-specific data
+    const enhancedPost = {
+      ...post.toObject(),
+      userInteraction: {
+        hasVoted: post.getUserVote(req.user._id),
+        hasCommented: post.hasUserCommented(req.user._id),
+        hasShared: post.hasUserReshared(req.user._id),
+      },
+    };
+
+    res.json({
+      success: true,
+      post: enhancedPost,
     });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
@@ -200,30 +220,61 @@ exports.updatePost = async (req, res) => {
       });
     }
 
-    const updates = req.body;
-
-    // Remove fields that shouldn't be updated directly
-    delete updates.author;
-    delete updates.votes;
-    delete updates.comments;
-    delete updates.analytics;
-    delete updates.reports;
-    delete updates.moderationLog;
-
-    // Handle media updates if files are provided
-    if (req.files) {
-      // TODO: Implement media update logic
+    // Validate update data
+    const validationError = validatePost(req.body);
+    if (validationError) {
+      return res.status(400).json({ message: validationError });
     }
+
+    const updates = req.body;
+    const protectedFields = [
+      "author",
+      "votes",
+      "comments",
+      "analytics",
+      "reports",
+      "moderationLog",
+      "editHistory",
+      "reshares",
+      "originalPost",
+    ];
+
+    // Remove protected fields
+    protectedFields.forEach((field) => delete updates[field]);
+
+    // Handle media updates
+    if (req.files && req.files.length > 0) {
+      const mediaUrls = [];
+      for (const file of req.files) {
+        const fileName = `${uuidv4()}${path.extname(file.originalname)}`;
+        const url = await uploadToStorage(file.buffer, fileName, file.mimetype);
+        mediaUrls.push({ url, type: file.mimetype });
+      }
+      updates.media = mediaUrls;
+    }
+
+    // Add edit history
+    post.editHistory.push({
+      editedAt: new Date(),
+      editor: req.user._id,
+      changes: Object.keys(updates),
+    });
 
     Object.assign(post, updates);
     await post.save();
 
-    res.json({ post });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error updating post",
-      error: error.message,
+    await post.populate([
+      { path: "author", select: "name avatar" },
+      { path: "category", select: "name" },
+    ]);
+
+    res.json({
+      success: true,
+      message: "Post updated successfully",
+      post,
     });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
@@ -241,243 +292,179 @@ exports.deletePost = async (req, res) => {
       });
     }
 
+    // Handle reshare cleanup
+    if (post.originalPost) {
+      const originalPost = await Post.findById(post.originalPost);
+      if (originalPost) {
+        originalPost.reshares = originalPost.reshares.filter(
+          (reshare) => !reshare.user.equals(req.user._id)
+        );
+        await originalPost.save();
+      }
+    }
+
+    // Soft delete
     post.status = "deleted";
+    post.deletedAt = new Date();
+    post.deletedBy = req.user._id;
     await post.save();
 
-    res.json({ message: "Post deleted successfully" });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error deleting post",
-      error: error.message,
+    // Update user activity
+    await updateUserActivity(req.user._id, "post_deleted");
+
+    res.json({
+      success: true,
+      message: "Post deleted successfully",
     });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
 // Vote on a post
 exports.votePost = async (req, res) => {
   try {
-    const { vote } = req.body; // 'up' or 'down'
     const post = await Post.findById(req.params.postId);
-
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    const currentVote = post.getUserVote(req.user._id);
+    const voteType = req.body.type === "upvote" ? "upvotes" : "downvotes";
+    const oppositeType = voteType === "upvotes" ? "downvotes" : "upvotes";
 
-    // Remove existing vote if any
-    if (currentVote === "up") {
-      post.votes.upvotes = post.votes.upvotes.filter(
-        (id) => id.toString() !== req.user._id.toString()
-      );
-    } else if (currentVote === "down") {
-      post.votes.downvotes = post.votes.downvotes.filter(
-        (id) => id.toString() !== req.user._id.toString()
-      );
-    }
+    // Remove from opposite vote array if exists
+    post.votes[oppositeType] = post.votes[oppositeType].filter(
+      (id) => id.toString() !== req.user.id.toString()
+    );
 
-    // Add new vote if different from current
-    if (vote !== currentVote) {
-      if (vote === "up") {
-        post.votes.upvotes.push(req.user._id);
-      } else if (vote === "down") {
-        post.votes.downvotes.push(req.user._id);
-      }
+    // Toggle vote in target array
+    const voteIndex = post.votes[voteType].indexOf(req.user.id);
+    if (voteIndex === -1) {
+      post.votes[voteType].push(req.user.id);
+    } else {
+      post.votes[voteType].splice(voteIndex, 1);
     }
 
     await post.save();
-    res.json({ post });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error voting on post",
-      error: error.message,
-    });
+    res.json({ success: true, post });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
-// Add a comment
 exports.addComment = async (req, res) => {
   try {
-    const { content } = req.body;
     const post = await Post.findById(req.params.postId);
-
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    post.comments.push({
-      author: req.user._id,
-      content,
+    const comment = new Comment({
+      author: req.user.id,
+      content: req.body.content,
     });
 
+    await comment.save();
+    post.comments.push(comment._id);
+    post.analytics.engagement.comments += 1;
     await post.save();
-    await post.populate("comments.author", "name avatar");
 
-    res.json({ post });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error adding comment",
-      error: error.message,
-    });
+    await comment.populate("author", "name avatar");
+    res.json({ success: true, comment });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
-// Vote on a comment
 exports.voteComment = async (req, res) => {
   try {
-    const { vote } = req.body; // 'up' or 'down'
-    const post = await Post.findById(req.params.postId);
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    const comment = post.comments.id(req.params.commentId);
+    const comment = await Comment.findById(req.params.commentId);
     if (!comment) {
       return res.status(404).json({ message: "Comment not found" });
     }
 
-    // Remove existing vote if any
-    comment.votes.upvotes = comment.votes.upvotes.filter(
-      (id) => id.toString() !== req.user._id.toString()
-    );
-    comment.votes.downvotes = comment.votes.downvotes.filter(
-      (id) => id.toString() !== req.user._id.toString()
+    const voteType = req.body.type === "upvote" ? "upvotes" : "downvotes";
+    const oppositeType = voteType === "upvotes" ? "downvotes" : "upvotes";
+
+    comment.votes[oppositeType] = comment.votes[oppositeType].filter(
+      (id) => id.toString() !== req.user.id.toString()
     );
 
-    // Add new vote
-    if (vote === "up") {
-      comment.votes.upvotes.push(req.user._id);
-    } else if (vote === "down") {
-      comment.votes.downvotes.push(req.user._id);
+    const voteIndex = comment.votes[voteType].indexOf(req.user.id);
+    if (voteIndex === -1) {
+      comment.votes[voteType].push(req.user.id);
+    } else {
+      comment.votes[voteType].splice(voteIndex, 1);
     }
 
-    await post.save();
-    res.json({ post });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error voting on comment",
-      error: error.message,
-    });
+    await comment.save();
+    res.json({ success: true, comment });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
-// Report a post
-exports.reportPost = async (req, res) => {
+exports.resharePost = async (req, res) => {
   try {
-    const { reason } = req.body;
-    const post = await Post.findById(req.params.postId);
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+    const originalPost = await Post.findById(req.params.postId);
+    if (!originalPost) {
+      return res.status(404).json({ message: "Original post not found" });
     }
 
-    if (post.hasUserReported(req.user._id)) {
-      return res
-        .status(400)
-        .json({ message: "You have already reported this post" });
+    const reshare = new Post({
+      author: req.user.id,
+      content: req.body.content,
+      originalPost: originalPost._id,
+      type: "reshare",
+    });
+
+    await reshare.save();
+    originalPost.reshares.push({ user: req.user.id, post: reshare._id });
+    await originalPost.save();
+
+    res.json({ success: true, post: reshare });
+  } catch (err) {
+    handleError(err, res);
+  }
+};
+
+exports.reportPost = async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
     }
 
     post.reports.push({
-      user: req.user._id,
-      reason,
+      user: req.user.id,
+      reason: req.body.reason,
+      details: req.body.details,
     });
 
     await post.save();
-    res.json({ message: "Post reported successfully" });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error reporting post",
-      error: error.message,
-    });
+    res.json({ success: true, message: "Post reported successfully" });
+  } catch (err) {
+    handleError(err, res);
   }
 };
 
-// Moderate a post (admin only)
 exports.moderatePost = async (req, res) => {
   try {
-    const { action, reason } = req.body;
     const post = await Post.findById(req.params.postId);
-
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    switch (action) {
-      case "hidden":
-        post.status = "hidden";
-        break;
-      case "restored":
-        post.status = "published";
-        break;
-      case "deleted":
-        post.status = "deleted";
-        break;
-      case "featured":
-        post.featured = true;
-        break;
-      case "unfeatured":
-        post.featured = false;
-        break;
-      default:
-        return res.status(400).json({ message: "Invalid moderation action" });
-    }
-
+    post.status = req.body.action;
     post.moderationLog.push({
-      action,
-      moderator: req.user._id,
-      reason,
+      moderator: req.user.id,
+      action: req.body.action,
+      reason: req.body.reason,
     });
 
     await post.save();
-    res.json({ post });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error moderating post",
-      error: error.message,
-    });
-  }
-};
-
-// Vote on a poll
-exports.votePoll = async (req, res) => {
-  try {
-    const { optionIndex } = req.body;
-    const post = await Post.findById(req.params.postId);
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    if (!post.poll) {
-      return res.status(400).json({ message: "This post has no poll" });
-    }
-
-    if (!post.isPollActive()) {
-      return res.status(400).json({ message: "Poll has ended" });
-    }
-
-    if (
-      !post.poll.allowMultipleVotes &&
-      post.hasUserVotedOnPoll(req.user._id)
-    ) {
-      return res
-        .status(400)
-        .json({ message: "You have already voted on this poll" });
-    }
-
-    if (optionIndex < 0 || optionIndex >= post.poll.options.length) {
-      return res.status(400).json({ message: "Invalid poll option" });
-    }
-
-    post.poll.options[optionIndex].votes.push(req.user._id);
-    await post.save();
-
-    res.json({ post });
-  } catch (error) {
-    res.status(500).json({
-      message: "Error voting on poll",
-      error: error.message,
-    });
+    res.json({ success: true, post });
+  } catch (err) {
+    handleError(err, res);
   }
 };

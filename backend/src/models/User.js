@@ -5,100 +5,154 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Please provide name"],
-      minlength: 3,
-      maxlength: 50,
+      required: true,
+      trim: true,
     },
     email: {
       type: String,
-      required: [true, "Please provide email"],
+      required: true,
       unique: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please provide valid email"],
+      trim: true,
+      lowercase: true,
     },
     password: {
       type: String,
-      required: [true, "Please provide password"],
-      minlength: 6,
+      required: true,
+      minlength: 8,
     },
     role: {
       type: String,
-      enum: ["user", "admin", "representative", "ngo", "cbo"],
-      default: "user",
+      enum: ["citizen", "representative", "admin"],
+      default: "citizen",
     },
-    county: {
-      type: String,
-      required: false,
-    },
-    constituency: {
-      type: String,
-      required: false,
-    },
-    ward: {
-      type: String,
-      required: false,
-    },
-    yob: {
-      type: Number,
-      required: false,
-      min: 1900,
-      max: new Date().getFullYear(),
-    },
-    phone: {
-      type: String,
-      required: false,
-      match: [/^\+254\d{9}$/, "Please provide valid Kenyan phone number"],
-    },
-    isVerified: {
+    emailVerified: {
       type: Boolean,
       default: false,
     },
-    verificationToken: String,
-    avatar: {
+    verificationStatus: {
       type: String,
-      default: "default-avatar.png",
+      enum: ["none", "pending", "approved", "rejected"],
+      default: "none",
     },
-    phoneVerified: {
-      type: Boolean,
-      default: false,
-    },
-    phoneOTP: {
-      code: String,
-      expiresAt: Date,
-    },
-    organizationId: {
+    verifiedAt: Date,
+    lastVerificationRequest: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Organization",
+      ref: "VerificationRequest",
     },
-    idVerification: {
-      status: {
-        type: String,
-        enum: ["pending", "verified", "rejected"],
-        default: "pending",
+    profile: {
+      avatar: String,
+      bio: String,
+      location: {
+        county: String,
+        constituency: String,
+        ward: String,
       },
-      documentUrl: String,
-      verifiedAt: Date,
+      socialLinks: {
+        twitter: String,
+        facebook: String,
+        linkedin: String,
+      },
     },
-    representativeCredentials: {
-      position: String,
-      credentials: [String],
-      verificationStatus: {
-        type: String,
-        enum: ["pending", "verified", "rejected"],
-        default: "pending",
+    settings: {
+      notifications: {
+        email: {
+          type: Boolean,
+          default: true,
+        },
+        push: {
+          type: Boolean,
+          default: true,
+        },
       },
+      privacy: {
+        showEmail: {
+          type: Boolean,
+          default: false,
+        },
+        showLocation: {
+          type: Boolean,
+          default: true,
+        },
+      },
+    },
+    status: {
+      type: String,
+      enum: ["active", "suspended", "banned"],
+      default: "active",
+    },
+    lastActive: Date,
+    sessionVersion: {
+      type: Number,
+      default: 0,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+// Indexes for faster queries
+userSchema.index({ email: 1 });
+userSchema.index({
+  "profile.location.county": 1,
+  "profile.location.constituency": 1,
+});
+userSchema.index({ role: 1, status: 1 });
+userSchema.index({ verificationStatus: 1 });
+
+// Hash password before saving
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
+// Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  try {
+    return await bcrypt.compare(candidatePassword, this.password);
+  } catch (error) {
+    throw new Error("Error comparing passwords");
+  }
+};
+
+// Method to check if user can perform representative actions
+userSchema.methods.canActAsRepresentative = function () {
+  return (
+    this.role === "representative" &&
+    this.verificationStatus === "approved" &&
+    this.status === "active"
+  );
+};
+
+// Method to check if user is verified
+userSchema.methods.isVerified = function () {
+  return this.emailVerified && this.verificationStatus === "approved";
+};
+
+// Clean response for client
+userSchema.methods.toClientJSON = function () {
+  return {
+    id: this._id,
+    name: this.name,
+    email: this.email,
+    role: this.role,
+    emailVerified: this.emailVerified,
+    verificationStatus: this.verificationStatus,
+    profile: this.profile,
+    settings: {
+      notifications: this.settings.notifications,
+      privacy: this.settings.privacy,
+    },
+    status: this.status,
+    createdAt: this.createdAt,
+  };
 };
 
 module.exports = mongoose.model("User", userSchema);

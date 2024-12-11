@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
-  ChatAltIcon,
+  ChatBubbleLeftIcon,
   UserGroupIcon,
-  LocationMarkerIcon,
+  MapPinIcon,
   BellIcon,
   DocumentTextIcon,
   ChartBarIcon,
-} from "@heroicons/react/outline";
+} from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -81,7 +81,7 @@ const CitizenDashboardPage = () => {
     {
       name: "Forum",
       description: "Participate in community discussions",
-      icon: ChatAltIcon,
+      icon: ChatBubbleLeftIcon,
       stats: [
         { label: "Participated", value: stats.posts.participated },
         { label: "Saved", value: stats.posts.saved },
@@ -92,7 +92,7 @@ const CitizenDashboardPage = () => {
     {
       name: "Local Services",
       description: "Find services and resources near you",
-      icon: LocationMarkerIcon,
+      icon: MapPinIcon,
       stats: [
         { label: "Available", value: 150 },
         { label: "Categories", value: 12 },
@@ -103,7 +103,7 @@ const CitizenDashboardPage = () => {
     {
       name: "Messages",
       description: "Connect with organizations and representatives",
-      icon: ChatAltIcon,
+      icon: ChatBubbleLeftIcon,
       stats: [
         { label: "Unread", value: stats.messages.unread },
         { label: "Total", value: stats.messages.total },
@@ -235,7 +235,7 @@ const CitizenDashboardPage = () => {
                       </p>
                       <div className="mt-2 flex items-center space-x-4">
                         <div className="flex items-center text-sm text-gray-500">
-                          <ChatAltIcon className="h-4 w-4 mr-1" />
+                          <ChatBubbleLeftIcon className="h-4 w-4 mr-1" />
                           15 comments
                         </div>
                         <div className="text-sm text-gray-500">2 hours ago</div>

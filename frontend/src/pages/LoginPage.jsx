@@ -22,8 +22,12 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await dispatch(login(credentials));
-    navigate("/");
+    try {
+      const result = await dispatch(login(credentials)).unwrap();
+      navigate("/");
+    } catch (error) {
+      // Error handling is already done in the reducer
+    }
   };
 
   return (

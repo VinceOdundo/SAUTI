@@ -1,15 +1,17 @@
-import { Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
-const PrivateRoute = ({ children, roles = [] }) => {
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
-  if (roles.length > 0 && !roles.includes(user.role)) {
-    return <Navigate to="/forbidden" />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;

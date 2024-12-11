@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const { ROLES } = require("../middlewares/rbacMiddleware");
+const { ROLES } = require("../middleware/rbacMiddleware");
 
 const createDefaultAdmin = async () => {
   try {

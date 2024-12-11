@@ -1,10 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middlewares/authMiddleware");
-const {
-  upload,
-  handleUploadError,
-} = require("../middlewares/uploadMiddleware");
+const { authenticateUser } = require("../middleware/authMiddleware");
+const { upload, handleUploadError } = require("../middleware/uploadMiddleware");
 const {
   sendMessage,
   getConversation,

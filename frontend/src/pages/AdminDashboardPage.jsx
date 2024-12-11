@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   UsersIcon,
-  OfficeBuildingIcon,
+  BuildingOfficeIcon,
   UserGroupIcon,
-  ChatAltIcon,
+  ChatBubbleLeftIcon,
   FlagIcon,
   ChartBarIcon,
-} from "@heroicons/react/outline";
+} from "@heroicons/react/24/outline";
 import StatCard from "../components/admin/StatCard";
 import VerificationRequests from "../components/admin/VerificationRequests";
 import ReportedContent from "../components/admin/ReportedContent";
@@ -160,7 +160,7 @@ const AdminDashboardPage = () => {
             />
             <StatCard
               title="Organizations"
-              icon={OfficeBuildingIcon}
+              icon={BuildingOfficeIcon}
               stats={[
                 { label: "Total", value: stats.organizations.total },
                 { label: "Verified", value: stats.organizations.verified },
@@ -178,7 +178,7 @@ const AdminDashboardPage = () => {
             />
             <StatCard
               title="Forum Posts"
-              icon={ChatAltIcon}
+              icon={ChatBubbleLeftIcon}
               stats={[
                 { label: "Total", value: stats.posts.total },
                 { label: "Reported", value: stats.posts.reported },
@@ -186,7 +186,7 @@ const AdminDashboardPage = () => {
             />
             <StatCard
               title="Messages"
-              icon={ChatAltIcon}
+              icon={ChatBubbleLeftIcon}
               stats={[
                 { label: "Total", value: stats.messages.total },
                 { label: "Today", value: stats.messages.today },

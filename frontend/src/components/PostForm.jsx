@@ -1,172 +1,222 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { PollOption, MediaUpload, LocationPicker } from "./post-components";
+import { createPost } from "../features/forum/forumAPI";
 import { toast } from "react-hot-toast";
+import { LocationPicker } from "./post-components";
 
 const PostForm = ({ onPostCreated }) => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const [postType, setPostType] = useState("text");
+  const { user } = useSelector((state) => state.auth);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    media: { images: [], video: null },
-    poll: { question: "", options: ["", ""] },
+    tags: "",
+    category: "general",
     location: {
       county: user?.county || "",
       constituency: user?.constituency || "",
       ward: user?.ward || "",
     },
-    tags: [],
+    images: [],
   });
-  const [loading, setLoading] = useState(false);
 
-  const postTypes = [
-    { id: "text", label: "Text", icon: "text" },
-    { id: "media", label: "Media", icon: "image" },
-    { id: "poll", label: "Poll", icon: "chart-bar" },
-    { id: "location", label: "Location", icon: "map-marker" },
-  ];
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLocationChange = (location) => {
+    setFormData((prev) => ({
+      ...prev,
+      location,
+    }));
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData((prev) => ({
+      ...prev,
+      images: files,
+    }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+
+    if (!formData.title.trim() || !formData.content.trim()) {
+      toast.error("Title and content are required");
+      return;
+    }
+
     try {
-      const response = await axios.post("/api/forum/posts", {
-        ...formData,
-        type: postType,
+      setIsLoading(true);
+
+      // Format tags as array
+      const tags = formData.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+      // Create form data for file upload support
+      const postData = new FormData();
+      postData.append("title", formData.title);
+      postData.append("content", formData.content);
+      postData.append("category", formData.category);
+      postData.append("tags", JSON.stringify(tags));
+      postData.append("location", JSON.stringify(formData.location));
+
+      // Add files if present
+      formData.images.forEach((image) => {
+        postData.append("images", image);
       });
 
-      // Show success message
-      toast.success("Post created successfully!");
+      const { post } = await createPost(postData);
 
-      // Update parent component
-      onPostCreated(response.data.post);
+      // Notify parent component
+      onPostCreated(post);
 
       // Reset form
       setFormData({
         title: "",
         content: "",
-        media: { images: [], video: null },
-        poll: { question: "", options: ["", ""] },
-        location: { county: "", constituency: "", ward: "" },
-        tags: [],
+        tags: "",
+        category: "general",
+        location: {
+          county: user?.county || "",
+          constituency: user?.constituency || "",
+          ward: user?.ward || "",
+        },
+        images: [],
       });
+
+      toast.success("Post created successfully!");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error creating post");
+      console.error("Post creation error:", error);
+      toast.error(error.message || "Failed to create post");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <p className="text-gray-500 text-center">
-          Please log in to create a post
-        </p>
-      </div>
-    );
-  }
+  const categories = [
+    "general",
+    "policy",
+    "development",
+    "education",
+    "health",
+    "environment",
+    "governance",
+    "other",
+  ];
 
   return (
-    <div className="bg-dark-700 rounded-lg p-4 mb-6">
-      <div className="flex items-center gap-4 mb-4">
-        <img
-          src={user.avatar}
-          alt={user.name}
-          className="w-10 h-10 rounded-full"
-        />
-        <div className="flex-1">
-          <h3 className="text-white font-medium">{user.name}</h3>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        {/* Post Type Selector */}
-        <div className="flex gap-2 mb-4 border-b border-dark-600 pb-4">
-          {postTypes.map((type) => (
-            <button
-              key={type.id}
-              type="button"
-              onClick={() => setPostType(type.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                postType === type.id
-                  ? "bg-primary-500 text-white"
-                  : "text-gray-400 hover:bg-dark-600"
-              }`}
-            >
-              <i className={`icon-${type.icon}`} />
-              {type.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Title Input */}
-        <input
-          type="text"
-          placeholder="Post title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className="w-full bg-dark-600 text-white px-4 py-2 rounded-lg mb-4"
-          required
-        />
-
-        {/* Content Input */}
-        <textarea
-          placeholder="What's on your mind?"
-          value={formData.content}
-          onChange={(e) =>
-            setFormData({ ...formData, content: e.target.value })
-          }
-          className="w-full bg-dark-600 text-white px-4 py-2 rounded-lg mb-4 min-h-[100px]"
-          required
-        />
-
-        {/* Conditional Form Elements */}
-        {postType === "media" && (
-          <MediaUpload
-            media={formData.media}
-            onChange={(media) => setFormData({ ...formData, media })}
-          />
-        )}
-
-        {postType === "poll" && (
-          <PollOption
-            poll={formData.poll}
-            onChange={(poll) => setFormData({ ...formData, poll })}
-          />
-        )}
-
-        {postType === "location" && (
-          <LocationPicker
-            location={formData.location}
-            onChange={(location) => setFormData({ ...formData, location })}
-          />
-        )}
-
-        {/* Tags Input */}
-        <div className="mb-4">
+    <div className="bg-white shadow rounded-lg p-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
           <input
             type="text"
-            placeholder="Add tags (comma separated)"
-            value={formData.tags.join(", ")}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                tags: e.target.value.split(",").map((tag) => tag.trim()),
-              })
-            }
-            className="w-full bg-dark-600 text-white px-4 py-2 rounded-lg"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="Post title"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            required
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-primary-500 text-white py-2 rounded-lg hover:bg-primary-600 disabled:opacity-50"
-        >
-          {loading ? "Posting..." : "Post"}
-        </button>
+        <div>
+          <textarea
+            name="content"
+            value={formData.content}
+            onChange={handleChange}
+            placeholder="What's on your mind?"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            rows="3"
+            required
+          />
+        </div>
+
+        <div>
+          <input
+            type="text"
+            name="tags"
+            value={formData.tags}
+            onChange={handleChange}
+            placeholder="Tags (comma-separated)"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+
+        <div>
+          <select
+            name="category"
+            value={formData.category}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+          >
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category.charAt(0).toUpperCase() + category.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <LocationPicker
+          location={formData.location}
+          onChange={handleLocationChange}
+        />
+
+        <div>
+          <input
+            type="file"
+            name="images"
+            onChange={handleImageChange}
+            multiple
+            accept="image/*"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+          />
+          {formData.images.length > 0 && (
+            <div className="mt-2 flex gap-2">
+              {formData.images.map((image, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={URL.createObjectURL(image)}
+                    alt={`Preview ${index + 1}`}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        images: prev.images.filter((_, i) => i !== index),
+                      }));
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-sm"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          >
+            {isLoading ? "Creating..." : "Create Post"}
+          </button>
+        </div>
       </form>
     </div>
   );

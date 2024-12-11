@@ -1,107 +1,96 @@
-import api from "../../utils/axiosConfig";
-import {
-  organizationStart,
-  organizationSuccess,
-  organizationFail,
-} from "./organizationSlice";
+import axios from "axios";
+import { API_URL } from "../../config";
 
-export const registerOrganization = (formData) => async (dispatch) => {
+const API = axios.create({
+  baseURL: `${API_URL}/api/organizations`,
+  withCredentials: true,
+});
+
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Register a new organization
+export const registerOrganization = async (formData) => {
   try {
-    dispatch(organizationStart());
-    const response = await api.post("/organizations/register", formData, {
+    const response = await API.post("/register", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    dispatch(organizationSuccess(response.data.organization));
-    return { success: true };
+    return response.data;
   } catch (error) {
-    dispatch(
-      organizationFail(
-        error.response?.data?.message || "Failed to register organization"
-      )
-    );
-    return { success: false, error: error.response?.data?.message };
+    throw error.response?.data || error;
   }
 };
 
-export const getOrganization = (organizationId) => async (dispatch) => {
+// Get organization details
+export const getOrganization = async (organizationId) => {
   try {
-    dispatch(organizationStart());
-    const response = await api.get(`/organizations/${organizationId}`);
-    dispatch(organizationSuccess(response.data.organization));
-    return { success: true };
+    const response = await API.get(`/${organizationId}`);
+    return response.data;
   } catch (error) {
-    dispatch(
-      organizationFail(
-        error.response?.data?.message || "Failed to fetch organization"
-      )
-    );
-    return { success: false, error: error.response?.data?.message };
+    throw error.response?.data || error;
   }
 };
 
-export const updateOrganization =
-  (organizationId, formData) => async (dispatch) => {
-    try {
-      dispatch(organizationStart());
-      const response = await api.patch(
-        `/organizations/${organizationId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      dispatch(organizationSuccess(response.data.organization));
-      return { success: true };
-    } catch (error) {
-      dispatch(
-        organizationFail(
-          error.response?.data?.message || "Failed to update organization"
-        )
-      );
-      return { success: false, error: error.response?.data?.message };
-    }
-  };
+// Update organization
+export const updateOrganization = async (organizationId, formData) => {
+  try {
+    const response = await API.patch(`/${organizationId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 
-export const verifyOrganization =
-  (organizationId, verificationData) => async (dispatch) => {
-    try {
-      dispatch(organizationStart());
-      const response = await api.post(
-        `/organizations/${organizationId}/verify`,
-        verificationData
-      );
-      dispatch(organizationSuccess(response.data.organization));
-      return { success: true };
-    } catch (error) {
-      dispatch(
-        organizationFail(
-          error.response?.data?.message || "Failed to verify organization"
-        )
-      );
-      return { success: false, error: error.response?.data?.message };
-    }
-  };
+// Add representative to organization
+export const addRepresentative = async (organizationId, userData) => {
+  try {
+    const response = await API.post(
+      `/${organizationId}/representatives`,
+      userData
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 
-export const addRepresentative =
-  (organizationId, representativeData) => async (dispatch) => {
-    try {
-      dispatch(organizationStart());
-      const response = await api.post(
-        `/organizations/${organizationId}/representatives`,
-        representativeData
-      );
-      dispatch(organizationSuccess(response.data.organization));
-      return { success: true };
-    } catch (error) {
-      dispatch(
-        organizationFail(
-          error.response?.data?.message || "Failed to add representative"
-        )
-      );
-      return { success: false, error: error.response?.data?.message };
-    }
-  };
+// Get organization representatives
+export const getOrganizationRepresentatives = async (organizationId) => {
+  try {
+    const response = await API.get(`/${organizationId}/representatives`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get organization verification status
+export const getVerificationStatus = async (organizationId) => {
+  try {
+    const response = await API.get(`/${organizationId}/verification-status`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get organization statistics
+export const getOrganizationStats = async (organizationId) => {
+  try {
+    const response = await API.get(`/${organizationId}/stats`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

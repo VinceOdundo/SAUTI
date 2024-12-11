@@ -1,11 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middlewares/authMiddleware");
-const { rbac, ROLES } = require("../middlewares/rbacMiddleware");
-const {
-  upload,
-  handleUploadError,
-} = require("../middlewares/uploadMiddleware");
+const { authenticateUser } = require("../middleware/authMiddleware");
+const { rbac, ROLES } = require("../middleware/rbacMiddleware");
+const { upload, handleUploadError } = require("../middleware/uploadMiddleware");
 const {
   registerRepresentative,
   verifyRepresentative,
@@ -67,7 +64,7 @@ router.post(
 
 // Get representative stats
 router.get(
-  "/stats",
+  "/:representativeId/stats",
   authenticateUser,
   rbac([ROLES.REPRESENTATIVE]),
   getRepresentativeStats

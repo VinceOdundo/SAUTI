@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { register } from "../features/auth/authAPI";
+import { toast } from "react-hot-toast";
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -22,9 +23,15 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await dispatch(register(formData));
-    if (!result.error) {
-      navigate("/complete-profile");
+    try {
+      const response = await dispatch(register(formData));
+      if (response.type.endsWith("/fulfilled")) {
+        navigate("/complete-profile");
+      } else if (response.type.endsWith("/rejected")) {
+        toast.error(response.error?.message || "Registration failed");
+      }
+    } catch (error) {
+      toast.error("Registration failed. Please try again.");
     }
   };
 

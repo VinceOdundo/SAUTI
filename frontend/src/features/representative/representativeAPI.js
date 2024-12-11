@@ -1,141 +1,103 @@
-import api from "../../utils/axiosConfig";
-import {
-  representativeStart,
-  representativeSuccess,
-  representativeFail,
-  setRepresentativeStats,
-} from "./representativeSlice";
+import axios from "axios";
+import { API_URL } from "../../config";
 
-export const registerRepresentative = (formData) => async (dispatch) => {
+const API = axios.create({
+  baseURL: `${API_URL}/api/representatives`,
+  withCredentials: true,
+});
+
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Register as a representative
+export const registerRepresentative = async (formData) => {
   try {
-    dispatch(representativeStart());
-    const response = await api.post("/representatives/register", formData, {
+    const response = await API.post("/register", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
     });
-    dispatch(representativeSuccess(response.data.representative));
-    return { success: true };
+    return response.data;
   } catch (error) {
-    dispatch(
-      representativeFail(
-        error.response?.data?.message || "Failed to register as representative"
-      )
-    );
-    return { success: false, error: error.response?.data?.message };
+    throw error.response?.data || error;
   }
 };
 
-export const getRepresentative = (representativeId) => async (dispatch) => {
+// Get representative details
+export const getRepresentative = async (representativeId) => {
   try {
-    dispatch(representativeStart());
-    const response = await api.get(`/representatives/${representativeId}`);
-    dispatch(representativeSuccess(response.data.representative));
-    return { success: true };
+    const response = await API.get(`/${representativeId}`);
+    return response.data;
   } catch (error) {
-    dispatch(
-      representativeFail(
-        error.response?.data?.message || "Failed to fetch representative"
-      )
-    );
-    return { success: false, error: error.response?.data?.message };
+    throw error.response?.data || error;
   }
 };
 
-export const updateRepresentative =
-  (representativeId, formData) => async (dispatch) => {
-    try {
-      dispatch(representativeStart());
-      const response = await api.patch(
-        `/representatives/${representativeId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      dispatch(representativeSuccess(response.data.representative));
-      return { success: true };
-    } catch (error) {
-      dispatch(
-        representativeFail(
-          error.response?.data?.message || "Failed to update representative"
-        )
-      );
-      return { success: false, error: error.response?.data?.message };
-    }
-  };
-
-export const verifyRepresentative =
-  (representativeId, verificationData) => async (dispatch) => {
-    try {
-      dispatch(representativeStart());
-      const response = await api.post(
-        `/representatives/${representativeId}/verify`,
-        verificationData
-      );
-      dispatch(representativeSuccess(response.data.representative));
-      return { success: true };
-    } catch (error) {
-      dispatch(
-        representativeFail(
-          error.response?.data?.message || "Failed to verify representative"
-        )
-      );
-      return { success: false, error: error.response?.data?.message };
-    }
-  };
-
-export const followRepresentative = (representativeId) => async (dispatch) => {
+// Update representative profile
+export const updateRepresentative = async (representativeId, formData) => {
   try {
-    dispatch(representativeStart());
-    const response = await api.post(
-      `/representatives/${representativeId}/follow`
-    );
-    dispatch(representativeSuccess(response.data.representative));
-    return { success: true };
+    const response = await API.patch(`/${representativeId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
   } catch (error) {
-    dispatch(
-      representativeFail(
-        error.response?.data?.message || "Failed to follow representative"
-      )
-    );
-    return { success: false, error: error.response?.data?.message };
+    throw error.response?.data || error;
   }
 };
 
-export const unfollowRepresentative =
-  (representativeId) => async (dispatch) => {
-    try {
-      dispatch(representativeStart());
-      const response = await api.post(
-        `/representatives/${representativeId}/unfollow`
-      );
-      dispatch(representativeSuccess(response.data.representative));
-      return { success: true };
-    } catch (error) {
-      dispatch(
-        representativeFail(
-          error.response?.data?.message || "Failed to unfollow representative"
-        )
-      );
-      return { success: false, error: error.response?.data?.message };
-    }
-  };
-
-export const getRepresentativeStats = () => async (dispatch) => {
+// Follow a representative
+export const followRepresentative = async (representativeId) => {
   try {
-    dispatch(representativeStart());
-    const response = await api.get("/representatives/stats");
-    dispatch(setRepresentativeStats(response.data));
-    return { success: true };
+    const response = await API.post(`/${representativeId}/follow`);
+    return response.data;
   } catch (error) {
-    dispatch(
-      representativeFail(
-        error.response?.data?.message || "Failed to fetch representative stats"
-      )
-    );
-    return { success: false, error: error.response?.data?.message };
+    throw error.response?.data || error;
+  }
+};
+
+// Unfollow a representative
+export const unfollowRepresentative = async (representativeId) => {
+  try {
+    const response = await API.post(`/${representativeId}/unfollow`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get representative statistics
+export const getRepresentativeStats = async (representativeId) => {
+  try {
+    const response = await API.get(`/${representativeId}/stats`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get representative's followers
+export const getRepresentativeFollowers = async (representativeId) => {
+  try {
+    const response = await API.get(`/${representativeId}/followers`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Get representative's activities
+export const getRepresentativeActivities = async (representativeId) => {
+  try {
+    const response = await API.get(`/${representativeId}/activities`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
   }
 };
