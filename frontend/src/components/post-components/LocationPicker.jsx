@@ -1,67 +1,74 @@
 import React, { useState, useEffect } from "react";
+import { useToast } from "../../contexts/ToastContext";
 import axios from "axios";
-import { API_URL } from "../../config";
 
 const LocationPicker = ({ location, onChange }) => {
   const [counties, setCounties] = useState([]);
   const [constituencies, setConstituencies] = useState([]);
   const [wards, setWards] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
   useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/locations`);
-        setCounties(response.data.counties);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching locations:", error);
-        setLoading(false);
-      }
-    };
-
-    fetchLocations();
+    fetchCounties();
   }, []);
 
   useEffect(() => {
-    const fetchConstituencies = async () => {
-      if (!location.county) {
-        setConstituencies([]);
-        return;
-      }
-
-      try {
-        const response = await axios.get(
-          `${API_URL}/locations/${location.county}/constituencies`
-        );
-        setConstituencies(response.data.constituencies);
-      } catch (error) {
-        console.error("Error fetching constituencies:", error);
-      }
-    };
-
-    fetchConstituencies();
+    if (location.county) {
+      fetchConstituencies(location.county);
+    } else {
+      setConstituencies([]);
+      setWards([]);
+    }
   }, [location.county]);
 
   useEffect(() => {
-    const fetchWards = async () => {
-      if (!location.constituency) {
-        setWards([]);
-        return;
-      }
+    if (location.constituency) {
+      fetchWards(location.constituency);
+    } else {
+      setWards([]);
+    }
+  }, [location.constituency]);
 
-      try {
-        const response = await axios.get(
-          `${API_URL}/locations/${location.county}/${location.constituency}/wards`
-        );
-        setWards(response.data.wards);
-      } catch (error) {
-        console.error("Error fetching wards:", error);
-      }
-    };
+  const fetchCounties = async () => {
+    try {
+      const response = await axios.get("/api/locations/counties");
+      setCounties(response.data);
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Failed to fetch counties",
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchWards();
-  }, [location.county, location.constituency]);
+  const fetchConstituencies = async (county) => {
+    try {
+      const response = await axios.get(
+        `/api/locations/constituencies/${county}`
+      );
+      setConstituencies(response.data);
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Failed to fetch constituencies",
+        "error"
+      );
+    }
+  };
+
+  const fetchWards = async (constituency) => {
+    try {
+      const response = await axios.get(`/api/locations/wards/${constituency}`);
+      setWards(response.data);
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Failed to fetch wards",
+        "error"
+      );
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,18 +85,30 @@ const LocationPicker = ({ location, onChange }) => {
     onChange(newLocation);
   };
 
-  if (loading) {
-    return <div className="text-gray-500">Loading locations...</div>;
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-4">
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-accent-primary border-t-transparent"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-3">
-      <div>
+    <div className="space-y-4">
+      {/* County */}
+      <div className="space-y-2">
+        <label
+          htmlFor="county"
+          className="block text-sm font-medium text-text-primary"
+        >
+          County
+        </label>
         <select
+          id="county"
           name="county"
           value={location.county}
           onChange={handleChange}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+          className="w-full bg-bg-primary text-text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
         >
           <option value="">Select County</option>
           {counties.map((county) => (
@@ -100,13 +119,21 @@ const LocationPicker = ({ location, onChange }) => {
         </select>
       </div>
 
+      {/* Constituency */}
       {location.county && (
-        <div>
+        <div className="space-y-2">
+          <label
+            htmlFor="constituency"
+            className="block text-sm font-medium text-text-primary"
+          >
+            Constituency
+          </label>
           <select
+            id="constituency"
             name="constituency"
             value={location.constituency}
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            className="w-full bg-bg-primary text-text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
           >
             <option value="">Select Constituency</option>
             {constituencies.map((constituency) => (
@@ -118,13 +145,21 @@ const LocationPicker = ({ location, onChange }) => {
         </div>
       )}
 
+      {/* Ward */}
       {location.constituency && (
-        <div>
+        <div className="space-y-2">
+          <label
+            htmlFor="ward"
+            className="block text-sm font-medium text-text-primary"
+          >
+            Ward
+          </label>
           <select
+            id="ward"
             name="ward"
             value={location.ward}
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+            className="w-full bg-bg-primary text-text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
           >
             <option value="">Select Ward</option>
             {wards.map((ward) => (

@@ -1,17 +1,18 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { toast } from "react-toastify";
+import { useToast } from "../../contexts/ToastContext";
 
 const AuthRoute = ({ children, requiredRole, sessionTimeout = 3600000 }) => {
-  const { user, isLoading, logout } = useAuth();
+  const { user, isLoading } = useAuth();
   const location = useLocation();
+  const { showToast } = useToast();
 
   // Check session timeout
   React.useEffect(() => {
     const lastActivity = localStorage.getItem("lastActivity");
     if (lastActivity && Date.now() - parseInt(lastActivity) > sessionTimeout) {
-      toast.warning("Session expired. Please login again.");
+      showToast("Session expired. Please login again.", "warning");
       logout();
     }
 
@@ -56,7 +57,7 @@ const AuthRoute = ({ children, requiredRole, sessionTimeout = 3600000 }) => {
       : user.role === requiredRole || user.role === "admin";
 
     if (!hasAccess) {
-      toast.error("You don't have permission to access this page");
+      showToast("You don't have permission to access this page", "error");
 
       // Redirect to appropriate dashboard based on user role
       const dashboardRoutes = {
@@ -78,7 +79,7 @@ const AuthRoute = ({ children, requiredRole, sessionTimeout = 3600000 }) => {
     location.pathname.includes("/settings");
 
   if (requiresVerification && !user.emailVerified) {
-    toast.warning("Please verify your email to access this page");
+    showToast("Please verify your email to access this page", "warning");
     return <Navigate to="/verify-email" state={{ from: location }} replace />;
   }
 

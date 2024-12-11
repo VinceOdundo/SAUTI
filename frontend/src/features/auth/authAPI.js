@@ -3,10 +3,10 @@ import { setAuthToken } from "../../utils/authUtils";
 import api from "../../utils/axiosConfig";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { API_URL } from "../../config";
+import { API_BASE_URL } from "../../config";
 
 const API = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: `${API_BASE_URL}/api`,
   withCredentials: true,
 });
 

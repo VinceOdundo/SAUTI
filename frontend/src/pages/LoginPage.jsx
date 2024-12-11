@@ -31,16 +31,16 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center bg-dark-800 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col justify-center bg-bg-primary py-12 px-4 sm:px-6 lg:px-8">
       <AuthNav isAuthenticated={false} />
-      <div className="max-w-md w-full space-y-8 bg-dark-700 p-8 rounded-xl border border-dark-600">
+      <div className="max-w-md w-full space-y-8 bg-bg-secondary p-8 rounded-xl border border-border">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-text-primary">
             Sign in to your account
           </h2>
         </div>
         {error && (
-          <div className="bg-red-900/50 text-red-200 p-4 rounded-lg text-sm">
+          <div className="bg-error-bg text-error-text p-4 rounded-lg text-sm">
             {error}
           </div>
         )}
@@ -49,7 +49,7 @@ const LoginPage = () => {
             <div>
               <label
                 htmlFor="email"
-                className="text-gray-300 text-sm font-medium"
+                className="text-text-secondary text-sm font-medium"
               >
                 Email
               </label>
@@ -58,7 +58,7 @@ const LoginPage = () => {
                 name="email"
                 id="email"
                 required
-                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-dark-500 bg-dark-800 text-gray-300 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-border bg-bg-primary text-text-primary rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary"
                 value={credentials.email}
                 onChange={handleChange}
               />
@@ -66,7 +66,7 @@ const LoginPage = () => {
             <div>
               <label
                 htmlFor="password"
-                className="text-gray-300 text-sm font-medium"
+                className="text-text-secondary text-sm font-medium"
               >
                 Password
               </label>
@@ -75,7 +75,7 @@ const LoginPage = () => {
                 name="password"
                 id="password"
                 required
-                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-dark-500 bg-dark-800 text-gray-300 rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-border bg-bg-primary text-text-primary rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary"
                 value={credentials.password}
                 onChange={handleChange}
               />
@@ -85,10 +85,19 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200"
+            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-bg-primary bg-accent-primary hover:bg-accent-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary transition-colors duration-200"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
+
+          <div className="text-center mt-4">
+            <Link
+              to="/forgot-password"
+              className="text-accent-primary hover:text-accent-secondary text-sm"
+            >
+              Forgot your password?
+            </Link>
+          </div>
         </form>
       </div>
     </div>

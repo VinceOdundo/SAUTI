@@ -1,232 +1,356 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ToastContext } from "../../contexts/ToastContext";
-
-const steps = [
-  {
-    id: "personal",
-    title: "Personal Information",
-    fields: ["name", "phoneNumber", "bio"],
-  },
-  {
-    id: "location",
-    title: "Location Details",
-    fields: ["county", "constituency", "ward"],
-  },
-];
+import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../contexts/ToastContext";
+import AppLayout from "../layouts/AppLayout";
+import axios from "axios";
 
 const ProfileWizard = () => {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: "",
-    phoneNumber: "",
+    fullName: "",
+    location: "",
     bio: "",
-    county: "",
-    constituency: "",
-    ward: "",
+    interests: [],
+    profileImage: null,
+    imagePreview: null,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { showToast } = useContext(ToastContext);
+  const { user, updateUser } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const handleInputChange = (field, value) => {
+  const interestOptions = [
+    "Education",
+    "Healthcare",
+    "Environment",
+    "Economy",
+    "Infrastructure",
+    "Social Justice",
+    "Technology",
+    "Security",
+    "Foreign Policy",
+    "Local Government",
+  ];
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("Image size should be less than 5MB", "error");
+        return;
+      }
+      setFormData({
+        ...formData,
+        profileImage: file,
+        imagePreview: URL.createObjectURL(file),
+      });
+    }
+  };
+
+  const handleInterestToggle = (interest) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      interests: prev.interests.includes(interest)
+        ? prev.interests.filter((i) => i !== interest)
+        : [...prev.interests, interest],
     }));
   };
 
-  const validateStep = () => {
-    const currentFields = steps[currentStep].fields;
-    const emptyFields = currentFields.filter((field) => !formData[field]);
-
-    if (emptyFields.length > 0) {
-      showToast(`Please fill in all required fields`, "error");
-      return false;
-    }
-    return true;
-  };
-
-  const handleNext = () => {
-    if (validateStep()) {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => prev - 1);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateStep()) return;
-
+  const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/profile", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(formData),
+      const formDataToSend = new FormData();
+      formDataToSend.append("fullName", formData.fullName);
+      formDataToSend.append("location", formData.location);
+      formDataToSend.append("bio", formData.bio);
+      formDataToSend.append("interests", JSON.stringify(formData.interests));
+      if (formData.profileImage) {
+        formDataToSend.append("profileImage", formData.profileImage);
+      }
+
+      const response = await axios.post("/api/users/profile", formDataToSend, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        showToast("Profile updated successfully", "success");
-        navigate("/dashboard");
-      } else {
-        showToast(data.message || "Failed to update profile", "error");
-      }
+      await updateUser(response.data);
+      showToast("Profile updated successfully", "success");
+      navigate("/dashboard");
     } catch (error) {
-      showToast("An error occurred", "error");
+      showToast(
+        error.response?.data?.message || "Failed to update profile",
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const renderPersonalInfo = () => (
-    <div className="space-y-4">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium">
-          Full Name
-        </label>
-        <input
-          id="name"
-          type="text"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={formData.name}
-          onChange={(e) => handleInputChange("name", e.target.value)}
-          placeholder="Enter your full name"
-        />
-      </div>
-      <div>
-        <label htmlFor="phoneNumber" className="block text-sm font-medium">
-          Phone Number
-        </label>
-        <input
-          id="phoneNumber"
-          type="tel"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={formData.phoneNumber}
-          onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
-          placeholder="Enter your phone number"
-        />
-      </div>
-      <div>
-        <label htmlFor="bio" className="block text-sm font-medium">
-          Bio
-        </label>
-        <textarea
-          id="bio"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={formData.bio}
-          onChange={(e) => handleInputChange("bio", e.target.value)}
-          placeholder="Tell us about yourself"
-          rows={3}
-        />
-      </div>
-    </div>
-  );
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-text-primary">
+                Basic Information
+              </h2>
+              <p className="mt-2 text-text-secondary">
+                Let's start with your basic information
+              </p>
+            </div>
 
-  const renderLocationInfo = () => (
-    <div className="space-y-4">
-      <div>
-        <label htmlFor="county" className="block text-sm font-medium">
-          County
-        </label>
-        <input
-          id="county"
-          type="text"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={formData.county}
-          onChange={(e) => handleInputChange("county", e.target.value)}
-          placeholder="Enter your county"
-        />
-      </div>
-      <div>
-        <label htmlFor="constituency" className="block text-sm font-medium">
-          Constituency
-        </label>
-        <input
-          id="constituency"
-          type="text"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={formData.constituency}
-          onChange={(e) => handleInputChange("constituency", e.target.value)}
-          placeholder="Enter your constituency"
-        />
-      </div>
-      <div>
-        <label htmlFor="ward" className="block text-sm font-medium">
-          Ward
-        </label>
-        <input
-          id="ward"
-          type="text"
-          required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={formData.ward}
-          onChange={(e) => handleInputChange("ward", e.target.value)}
-          placeholder="Enter your ward"
-        />
-      </div>
-    </div>
-  );
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="fullName"
+                  className="block text-sm font-medium text-text-primary"
+                >
+                  Full Name
+                </label>
+                <input
+                  id="fullName"
+                  type="text"
+                  required
+                  className="input"
+                  value={formData.fullName}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="location"
+                  className="block text-sm font-medium text-text-primary"
+                >
+                  Location
+                </label>
+                <input
+                  id="location"
+                  type="text"
+                  required
+                  className="input"
+                  value={formData.location}
+                  onChange={(e) =>
+                    setFormData({ ...formData, location: e.target.value })
+                  }
+                  placeholder="Enter your location"
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-text-primary">
+                Profile Picture
+              </h2>
+              <p className="mt-2 text-text-secondary">
+                Add a profile picture to personalize your account
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative">
+                <img
+                  src={
+                    formData.imagePreview ||
+                    user?.profileImage ||
+                    "/default-avatar.png"
+                  }
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-bg-primary"
+                />
+                <label
+                  htmlFor="profileImage"
+                  className="absolute bottom-0 right-0 bg-accent-primary hover:bg-accent-secondary text-white p-2 rounded-full cursor-pointer transition-base"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </label>
+                <input
+                  id="profileImage"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </div>
+              <p className="text-sm text-text-secondary">
+                Maximum file size: 5MB
+              </p>
+            </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-text-primary">
+                About You
+              </h2>
+              <p className="mt-2 text-text-secondary">
+                Tell us more about yourself
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label
+                  htmlFor="bio"
+                  className="block text-sm font-medium text-text-primary"
+                >
+                  Bio
+                </label>
+                <textarea
+                  id="bio"
+                  rows={4}
+                  className="input resize-none"
+                  value={formData.bio}
+                  onChange={(e) =>
+                    setFormData({ ...formData, bio: e.target.value })
+                  }
+                  placeholder="Write a short bio about yourself"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-text-primary">
+                  Interests
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {interestOptions.map((interest) => (
+                    <button
+                      key={interest}
+                      type="button"
+                      onClick={() => handleInterestToggle(interest)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-base ${
+                        formData.interests.includes(interest)
+                          ? "bg-accent-primary text-white"
+                          : "bg-bg-secondary text-text-secondary hover:bg-hover-bg"
+                      }`}
+                    >
+                      {interest}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-center text-3xl font-bold">
-            Complete Your Profile
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Step {currentStep + 1} of {steps.length}: {steps[currentStep].title}
-          </p>
-        </div>
+    <AppLayout>
+      <div className="container min-h-[calc(100vh-4rem)] flex items-center justify-center py-12">
+        <div className="w-full max-w-2xl">
+          <div className="card space-y-8">
+            {/* Progress */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-between">
+                {[1, 2, 3].map((stepNumber) => (
+                  <div
+                    key={stepNumber}
+                    className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-base ${
+                      stepNumber === step
+                        ? "bg-accent-primary text-white"
+                        : stepNumber < step
+                        ? "bg-success-bg text-success-text"
+                        : "bg-bg-secondary text-text-secondary"
+                    }`}
+                  >
+                    {stepNumber < step ? (
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    ) : (
+                      stepNumber
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          {currentStep === 0 ? renderPersonalInfo() : renderLocationInfo()}
+            {/* Content */}
+            {renderStep()}
 
-          <div className="flex justify-between">
-            {currentStep > 0 && (
+            {/* Navigation */}
+            <div className="flex justify-between space-x-4">
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setStep(step - 1)}
+                  className="btn btn-secondary"
+                >
+                  Back
+                </button>
+              )}
               <button
                 type="button"
-                onClick={handleBack}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Back
-              </button>
-            )}
-            {currentStep < steps.length - 1 ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                className="ml-auto px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                type="submit"
+                onClick={() => {
+                  if (step === 3) {
+                    handleSubmit();
+                  } else {
+                    setStep(step + 1);
+                  }
+                }}
                 disabled={isLoading}
-                className="ml-auto px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                className={`btn btn-primary ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                {isLoading ? "Saving..." : "Complete Profile"}
+                {isLoading
+                  ? "Saving..."
+                  : step === 3
+                  ? "Complete Setup"
+                  : "Continue"}
               </button>
-            )}
+            </div>
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

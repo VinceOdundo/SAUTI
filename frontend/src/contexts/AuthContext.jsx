@@ -2,15 +2,34 @@ import React, { createContext, useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-export const AuthContext = createContext(null);
+const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axios
+        .get(`${API_BASE_URL}/auth/profile`)
+        .then((response) => {
+          setUser(response.data.user);
+          setIsAuthenticated(true);
+        })
+        .catch(() => {
+          localStorage.removeItem("token");
+          delete axios.defaults.headers.common["Authorization"];
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setIsLoading(false);
+    }
   }, []);
 
   const checkAuth = async () => {
@@ -187,6 +206,7 @@ export const AuthProvider = ({ children }) => {
     user,
     isLoading,
     error,
+    isAuthenticated,
     login,
     register,
     logout,

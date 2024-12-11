@@ -6,6 +6,7 @@ import {
   EyeIcon,
   TrashIcon,
   BanIcon,
+  XIcon,
 } from "@heroicons/react/outline";
 import { toast } from "react-toastify";
 
@@ -139,7 +140,7 @@ const ReportedContent = () => {
         <select
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
-          className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+          className="block w-48 pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-bg-primary text-text-primary"
         >
           <option value="all">All Content</option>
           <option value="post">Posts</option>
@@ -150,7 +151,7 @@ const ReportedContent = () => {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+          className="block w-48 pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-bg-primary text-text-primary"
         >
           <option value="pending">Pending</option>
           <option value="resolved">Resolved</option>
@@ -159,118 +160,75 @@ const ReportedContent = () => {
       </div>
 
       {/* Reports List */}
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-bg-primary shadow overflow-hidden sm:rounded-md">
+        <ul className="divide-y divide-border">
           {reports.map((report) => (
-            <li key={report._id}>
-              <div className="px-4 py-4 sm:px-6">
-                {/* Report Header */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-lg font-medium text-gray-900">
-                      {report.type === "post"
-                        ? report.content.title
-                        : `Reported ${report.type}: ${
-                            report.content.username || report.content.author
-                          }`}
-                    </h4>
-                    <p className="text-sm text-gray-500">
-                      {report.reports.length} report(s) •{" "}
-                      {new Date(report.createdAt).toLocaleDateString()}
-                    </p>
+            <li key={report._id} className="px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-text-primary font-medium">
+                      {report.reporter.name}
+                    </span>
+                    <span className="text-text-secondary">
+                      reported {report.type}
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleAction(report._id, "ignored")}
-                      className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <CheckCircleIcon className="h-4 w-4 mr-1" />
-                      Ignore
-                    </button>
-                    <button
-                      onClick={() => handleAction(report._id, "warning")}
-                      className="inline-flex items-center px-3 py-2 border border-yellow-300 shadow-sm text-sm leading-4 font-medium rounded-md text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                    >
-                      <ExclamationCircleIcon className="h-4 w-4 mr-1" />
-                      Warn
-                    </button>
-                    <button
-                      onClick={() => handleAction(report._id, "removed")}
-                      className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    >
-                      <TrashIcon className="h-4 w-4 mr-1" />
-                      Remove
-                    </button>
-                    {report.type === "user" && (
-                      <button
-                        onClick={() => handleAction(report._id, "banned")}
-                        className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-black hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                      >
-                        <BanIcon className="h-4 w-4 mr-1" />
-                        Ban
-                      </button>
-                    )}
-                  </div>
+                  <p className="mt-1 text-text-secondary">{report.reason}</p>
                 </div>
 
-                {/* Content Preview */}
-                {report.type === "post" && (
-                  <div className="mt-4 bg-gray-50 p-4 rounded-md">
-                    <div className="text-sm text-gray-900">
-                      {report.content.text}
-                    </div>
-                    <div className="mt-2 flex justify-end">
-                      <button className="inline-flex items-center text-sm text-blue-600 hover:text-blue-500">
-                        <EyeIcon className="h-4 w-4 mr-1" />
-                        View Full Post
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Reports Details */}
-                <div className="mt-4">
-                  <h5 className="text-sm font-medium text-gray-900 mb-2">
-                    Report Details
-                  </h5>
-                  <div className="space-y-3">
-                    {report.reports.map((r, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-50 p-3 rounded-md text-sm"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            {r.reason}
-                          </span>
-                          <span className="text-gray-500">
-                            {new Date(r.timestamp).toLocaleString()}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-gray-600">{r.description}</p>
-                        <div className="mt-1 text-gray-500">
-                          Reported by: {r.reportedBy}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div className="mt-4">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      report.status === "pending"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : report.status === "resolved"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
+                {/* Action Buttons */}
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleAction(report._id, "ignore")}
+                    className="inline-flex items-center px-3 py-2 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-text-secondary bg-bg-secondary hover:bg-hover-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary"
                   >
-                    {report.status.charAt(0).toUpperCase() +
-                      report.status.slice(1)}
-                  </span>
+                    <XIcon className="h-4 w-4 mr-1" />
+                    Ignore
+                  </button>
+
+                  <button
+                    onClick={() => handleAction(report._id, "warning")}
+                    className="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md text-warning-text bg-warning-bg hover:bg-warning-bg/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warning-text"
+                  >
+                    <ExclamationCircleIcon className="h-4 w-4 mr-1" />
+                    Warn
+                  </button>
+
+                  <button
+                    onClick={() => handleAction(report._id, "removed")}
+                    className="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md text-error-text bg-error-bg hover:bg-error-bg/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-error-text"
+                  >
+                    <TrashIcon className="h-4 w-4 mr-1" />
+                    Remove
+                  </button>
+
+                  {report.type === "user" && (
+                    <button
+                      onClick={() => handleAction(report._id, "banned")}
+                      className="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md text-text-primary bg-bg-tertiary hover:bg-hover-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-primary"
+                    >
+                      <BanIcon className="h-4 w-4 mr-1" />
+                      Ban
+                    </button>
+                  )}
                 </div>
+              </div>
+
+              {/* Status */}
+              <div className="mt-4">
+                <span
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    report.status === "pending"
+                      ? "bg-warning-bg text-warning-text"
+                      : report.status === "resolved"
+                      ? "bg-success-bg text-success-text"
+                      : "bg-bg-secondary text-text-secondary"
+                  }`}
+                >
+                  {report.status.charAt(0).toUpperCase() +
+                    report.status.slice(1)}
+                </span>
               </div>
             </li>
           ))}

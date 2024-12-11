@@ -1,75 +1,127 @@
-import React, { useState, useContext } from "react";
-import { ToastContext } from "../../contexts/ToastContext";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useToast } from "../../contexts/ToastContext";
+import AppLayout from "../layouts/AppLayout";
+import axios from "axios";
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { showToast } = useContext(ToastContext);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { showToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showToast(
-          "Password reset instructions have been sent to your email",
-          "success"
-        );
-        setEmail("");
-      } else {
-        showToast(data.message || "Failed to send reset email", "error");
-      }
+      await axios.post("/api/auth/forgot-password", { email });
+      setIsSubmitted(true);
+      showToast(
+        "Password reset instructions have been sent to your email",
+        "success"
+      );
     } catch (error) {
-      showToast("An error occurred", "error");
+      showToast(
+        error.response?.data?.message || "Failed to send reset email",
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-        <div>
-          <h2 className="text-center text-3xl font-bold">Reset Password</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your email address and we'll send you instructions to reset
-            your password.
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium">
-              Email Address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-            />
+    <AppLayout>
+      <div className="container min-h-[calc(100vh-4rem)] flex items-center justify-center py-12">
+        <div className="w-full max-w-md">
+          <div className="card space-y-8">
+            {/* Header */}
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-text-primary">
+                Reset Your Password
+              </h1>
+              <p className="mt-2 text-text-secondary">
+                Enter your email address and we'll send you instructions to
+                reset your password
+              </p>
+            </div>
+
+            {/* Form */}
+            {!isSubmitted ? (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-text-primary"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    className="input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                  />
+                </div>
+
+                <div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`w-full btn btn-primary ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {isLoading ? "Sending..." : "Send Reset Instructions"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-success-bg text-success-text">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <p className="text-text-primary">
+                  Check your email for password reset instructions
+                </p>
+                <p className="text-text-secondary text-sm">
+                  If you don't see the email, check your spam folder
+                </p>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="text-center">
+              <p className="text-text-secondary">
+                Remember your password?{" "}
+                <Link
+                  to="/login"
+                  className="text-accent-primary hover:text-accent-secondary transition-base"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            {isLoading ? "Sending..." : "Send Reset Instructions"}
-          </button>
-        </form>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

@@ -8,7 +8,7 @@ const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
   const { confirmResetPassword } = useAuth();
-  const { addToast } = useToast();
+  const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     password: "",
@@ -38,7 +38,7 @@ const ResetPassword = () => {
 
     const error = validatePassword();
     if (error) {
-      addToast({
+      showToast({
         message: error,
         type: "error",
       });
@@ -49,7 +49,7 @@ const ResetPassword = () => {
 
     try {
       await confirmResetPassword(token, formData.password);
-      addToast({
+      showToast({
         message: "Password has been reset successfully",
         type: "success",
       });
@@ -57,7 +57,7 @@ const ResetPassword = () => {
         state: { message: "You can now sign in with your new password" },
       });
     } catch (error) {
-      addToast({
+      showToast({
         message: error.message || "Failed to reset password. Please try again.",
         type: "error",
       });

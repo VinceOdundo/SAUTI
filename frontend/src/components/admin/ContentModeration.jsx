@@ -161,7 +161,9 @@ const ContentModeration = () => {
       <div
         key={item._id}
         className={`p-4 border rounded-lg ${
-          isSelected ? "bg-primary-50 border-primary-200" : "bg-white"
+          isSelected
+            ? "bg-info-bg border-accent-primary"
+            : "bg-bg-primary border-border"
         }`}
       >
         <div className="flex items-start justify-between">
@@ -170,30 +172,30 @@ const ContentModeration = () => {
               type="checkbox"
               checked={isSelected}
               onChange={() => toggleSelectItem(item._id)}
-              className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+              className="h-4 w-4 text-accent-primary rounded border-border focus:ring-accent-primary"
             />
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-gray-900">
+                <span className="font-medium text-text-primary">
                   {item.author.name}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-text-secondary">
                   {format(new Date(item.createdAt), "PPp")}
                 </span>
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
                     item.severity === "high"
-                      ? "bg-red-100 text-red-800"
+                      ? "bg-error-bg text-error-text"
                       : item.severity === "medium"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-green-100 text-green-800"
+                      ? "bg-warning-bg text-warning-text"
+                      : "bg-success-bg text-success-text"
                   }`}
                 >
                   {item.severity}
                 </span>
               </div>
-              <p className="mt-1 text-gray-600">{item.content}</p>
-              <div className="mt-2 text-sm text-gray-500">
+              <p className="mt-1 text-text-secondary">{item.content}</p>
+              <div className="mt-2 text-sm text-text-secondary">
                 <span className="font-medium">Reported by:</span>{" "}
                 {item.reports.length} users
               </div>
@@ -203,21 +205,21 @@ const ContentModeration = () => {
           <div className="flex space-x-2">
             <button
               onClick={() => handleSingleAction(item._id, "approve")}
-              className="p-1 rounded-full text-green-600 hover:bg-green-50"
+              className="p-1 rounded-full text-success-text hover:bg-success-bg"
               title="Approve"
             >
               <CheckCircleIcon className="h-5 w-5" />
             </button>
             <button
               onClick={() => handleSingleAction(item._id, "reject")}
-              className="p-1 rounded-full text-red-600 hover:bg-red-50"
+              className="p-1 rounded-full text-error-text hover:bg-error-bg"
               title="Reject"
             >
               <XCircleIcon className="h-5 w-5" />
             </button>
             <button
               onClick={() => handleSingleAction(item._id, "ban")}
-              className="p-1 rounded-full text-gray-600 hover:bg-gray-50"
+              className="p-1 rounded-full text-text-secondary hover:bg-hover-bg"
               title="Ban User"
             >
               <BanIcon className="h-5 w-5" />
@@ -232,10 +234,12 @@ const ContentModeration = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Content Moderation</h2>
+        <h2 className="text-2xl font-bold text-text-primary">
+          Content Moderation
+        </h2>
         <button
           onClick={fetchContent}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+          className="flex items-center space-x-2 text-text-secondary hover:text-text-primary"
         >
           <RefreshIcon className="h-5 w-5" />
           <span>Refresh</span>
@@ -243,12 +247,12 @@ const ContentModeration = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow-sm">
-        <FilterIcon className="h-5 w-5 text-gray-400" />
+      <div className="flex items-center space-x-4 bg-bg-primary p-4 rounded-lg shadow-sm">
+        <FilterIcon className="h-5 w-5 text-text-secondary" />
         <select
           value={filters.type}
           onChange={(e) => handleFilterChange("type", e.target.value)}
-          className="rounded-md border-gray-300 text-sm focus:ring-primary-500 focus:border-primary-500"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
         >
           <option value="all">All Content</option>
           <option value="posts">Posts Only</option>
@@ -258,7 +262,7 @@ const ContentModeration = () => {
         <select
           value={filters.status}
           onChange={(e) => handleFilterChange("status", e.target.value)}
-          className="rounded-md border-gray-300 text-sm focus:ring-primary-500 focus:border-primary-500"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
         >
           <option value="pending">Pending</option>
           <option value="resolved">Resolved</option>
@@ -268,7 +272,7 @@ const ContentModeration = () => {
         <select
           value={filters.severity}
           onChange={(e) => handleFilterChange("severity", e.target.value)}
-          className="rounded-md border-gray-300 text-sm focus:ring-primary-500 focus:border-primary-500"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
         >
           <option value="all">All Severity</option>
           <option value="high">High</option>
@@ -279,7 +283,7 @@ const ContentModeration = () => {
         <select
           value={filters.dateRange}
           onChange={(e) => handleFilterChange("dateRange", e.target.value)}
-          className="rounded-md border-gray-300 text-sm focus:ring-primary-500 focus:border-primary-500"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
         >
           <option value="all">All Time</option>
           <option value="today">Today</option>
@@ -290,28 +294,28 @@ const ContentModeration = () => {
 
       {/* Bulk Actions */}
       {selectedItems.size > 0 && (
-        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+        <div className="flex items-center justify-between bg-bg-secondary p-4 rounded-lg">
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
               checked={selectedItems.size === content.length}
               onChange={selectAll}
-              className="h-4 w-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+              className="h-4 w-4 text-accent-primary rounded border-border focus:ring-accent-primary"
             />
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-text-secondary">
               {selectedItems.size} items selected
             </span>
           </div>
           <div className="flex space-x-3">
             <button
               onClick={() => handleBulkAction("approve")}
-              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+              className="px-4 py-2 text-sm font-medium text-success-text bg-success-bg rounded-md hover:bg-success-bg/80"
             >
               Approve Selected
             </button>
             <button
               onClick={() => handleBulkAction("reject")}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+              className="px-4 py-2 text-sm font-medium text-error-text bg-error-bg rounded-md hover:bg-error-bg/80"
             >
               Reject Selected
             </button>

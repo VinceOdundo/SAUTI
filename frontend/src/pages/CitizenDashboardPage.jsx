@@ -136,15 +136,15 @@ const CitizenDashboardPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-base-secondary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-primary">
               Welcome, {user?.name}
             </h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-secondary">
               Stay connected with your community
             </p>
           </div>
@@ -164,7 +164,7 @@ const CitizenDashboardPage = () => {
             <Link
               key={feature.name}
               to={feature.link}
-              className="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-200"
+              className="bg-base overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-200"
             >
               <div className="p-5">
                 <div className="flex items-center">

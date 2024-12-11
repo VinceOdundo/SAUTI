@@ -1,0 +1,301 @@
+/* Base Theme Variables */
+:root {
+  /* Light Mode Colors - Default */
+  --light-bg-primary: #ffffff;
+  --light-bg-secondary: #f6f8fa;
+  --light-bg-tertiary: #f0f2f4;
+  --light-text-primary: #24292f;
+  --light-text-secondary: #57606a;
+  --light-border: #d0d7de;
+  --light-accent-primary: #0969da;
+  --light-accent-secondary: #218bff;
+  --light-hover-bg: #f3f4f6;
+  --light-shadow: rgba(31, 35, 40, 0.04);
+
+  /* Status Colors - Light */
+  --light-success-bg: #dcfce7;
+  --light-success-text: #166534;
+  --light-warning-bg: #fef3c7;
+  --light-warning-text: #92400e;
+  --light-error-bg: #fee2e2;
+  --light-error-text: #991b1b;
+  --light-info-bg: #dbeafe;
+  --light-info-text: #1e40af;
+
+  /* Interactive Colors - Light */
+  --light-upvote: #059669;
+  --light-upvote-bg: #ecfdf5;
+  --light-downvote: #dc2626;
+  --light-downvote-bg: #fef2f2;
+
+  /* Dark Mode Colors */
+  --dark-bg-primary: #0d1117;
+  --dark-bg-secondary: #161b22;
+  --dark-bg-tertiary: #21262d;
+  --dark-text-primary: #c9d1d9;
+  --dark-text-secondary: #8b949e;
+  --dark-border: #30363d;
+  --dark-accent-primary: #58a6ff;
+  --dark-accent-secondary: #1f6feb;
+  --dark-hover-bg: #1f2937;
+  --dark-shadow: rgba(0, 0, 0, 0.3);
+
+  /* Status Colors - Dark */
+  --dark-success-bg: #065f46;
+  --dark-success-text: #a7f3d0;
+  --dark-warning-bg: #78350f;
+  --dark-warning-text: #fcd34d;
+  --dark-error-bg: #7f1d1d;
+  --dark-error-text: #fecaca;
+  --dark-info-bg: #1e3a8a;
+  --dark-info-text: #bfdbfe;
+
+  /* Interactive Colors - Dark */
+  --dark-upvote: #34d399;
+  --dark-upvote-bg: #064e3b;
+  --dark-downvote: #f87171;
+  --dark-downvote-bg: #7f1d1d;
+
+  /* Typography */
+  --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  
+  /* Font Sizes */
+  --text-xs: 0.75rem;    /* 12px */
+  --text-sm: 0.875rem;   /* 14px */
+  --text-base: 1rem;     /* 16px */
+  --text-lg: 1.125rem;   /* 18px */
+  --text-xl: 1.25rem;    /* 20px */
+  --text-2xl: 1.5rem;    /* 24px */
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Spacing */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px */
+  --space-6: 1.5rem;   /* 24px */
+  --space-8: 2rem;     /* 32px */
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --duration-200: 200ms;
+
+  /* Status Colors */
+  --light-success-bg: #dcfce7;
+  --light-success-text: #166534;
+  --light-warning-bg: #fef3c7;
+  --light-warning-text: #92400e;
+  --light-error-bg: #fee2e2;
+  --light-error-text: #991b1b;
+
+  /* Dark Mode Status Colors */
+  --dark-success-bg: #065f46;
+  --dark-success-text: #a7f3d0;
+  --dark-warning-bg: #78350f;
+  --dark-warning-text: #fcd34d;
+  --dark-error-bg: #7f1d1d;
+  --dark-error-text: #fecaca;
+}
+
+/* Light Theme (default) */
+:root {
+  --bg-primary: var(--light-bg-primary);
+  --bg-secondary: var(--light-bg-secondary);
+  --bg-tertiary: var(--light-bg-tertiary);
+  --text-primary: var(--light-text-primary);
+  --text-secondary: var(--light-text-secondary);
+  --border: var(--light-border);
+  --accent-primary: var(--light-accent-primary);
+  --accent-secondary: var(--light-accent-secondary);
+  --hover-bg: var(--light-hover-bg);
+  --shadow: var(--light-shadow);
+
+  /* Status Colors */
+  --success-bg: var(--light-success-bg);
+  --success-text: var(--light-success-text);
+  --warning-bg: var(--light-warning-bg);
+  --warning-text: var(--light-warning-text);
+  --error-bg: var(--light-error-bg);
+  --error-text: var(--light-error-text);
+  --info-bg: var(--light-info-bg);
+  --info-text: var(--light-info-text);
+
+  /* Interactive Colors */
+  --upvote: var(--light-upvote);
+  --upvote-bg: var(--light-upvote-bg);
+  --downvote: var(--light-downvote);
+  --downvote-bg: var(--light-downvote-bg);
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --bg-primary: var(--dark-bg-primary);
+  --bg-secondary: var(--dark-bg-secondary);
+  --bg-tertiary: var(--dark-bg-tertiary);
+  --text-primary: var(--dark-text-primary);
+  --text-secondary: var(--dark-text-secondary);
+  --border: var(--dark-border);
+  --accent-primary: var(--dark-accent-primary);
+  --accent-secondary: var(--dark-accent-secondary);
+  --hover-bg: var(--dark-hover-bg);
+  --shadow: var(--dark-shadow);
+
+  /* Status Colors */
+  --success-bg: var(--dark-success-bg);
+  --success-text: var(--dark-success-text);
+  --warning-bg: var(--dark-warning-bg);
+  --warning-text: var(--dark-warning-text);
+  --error-bg: var(--dark-error-bg);
+  --error-text: var(--dark-error-text);
+  --info-bg: var(--dark-info-bg);
+  --info-text: var(--dark-info-text);
+
+  /* Interactive Colors */
+  --upvote: var(--dark-upvote);
+  --upvote-bg: var(--dark-upvote-bg);
+  --downvote: var(--dark-downvote);
+  --downvote-bg: var(--dark-downvote-bg);
+}
+
+/* Utility Classes */
+.transition-base {
+  transition-property: color, background-color, border-color;
+  transition-duration: var(--duration-200);
+}
+
+.focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+/* Button Base Styles */
+.btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-md);
+  transition: var(--duration-200);
+}
+
+.btn-primary {
+  color: white;
+  background-color: var(--accent-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-secondary);
+}
+
+.btn-secondary {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--hover-bg);
+}
+
+/* Input Base Styles */
+.input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: var(--duration-200);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary);
+}
+
+/* Card Base Styles */
+.card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.card:hover {
+  border-color: var(--accent-primary);
+}
+
+/* Text Styles */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-accent {
+  color: var(--accent-primary);
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
+} 
+
+/* Status Colors */
+.bg-base {
+  background-color: var(--bg-primary);
+}
+
+.bg-base-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.bg-base-tertiary {
+  background-color: var(--bg-tertiary);
+}
+
+.status-success {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+}
+
+.status-warning {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.table-header {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+} 

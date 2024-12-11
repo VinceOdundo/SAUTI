@@ -6,7 +6,7 @@ import LoadingSpinner from "../common/LoadingSpinner";
 
 const ForgotPassword = () => {
   const { resetPassword } = useAuth();
-  const { addToast } = useToast();
+  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -18,17 +18,15 @@ const ForgotPassword = () => {
     try {
       await resetPassword(email);
       setIsSubmitted(true);
-      addToast({
-        message: "Password reset instructions have been sent to your email",
-        type: "success",
-      });
+      showToast(
+        "Password reset instructions have been sent to your email",
+        "success"
+      );
     } catch (error) {
-      addToast({
-        message:
-          error.message ||
-          "Failed to send reset instructions. Please try again.",
-        type: "error",
-      });
+      showToast(
+        error.message || "Failed to send reset instructions. Please try again.",
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }

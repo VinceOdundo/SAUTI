@@ -189,8 +189,8 @@ const RepresentativeDashboardPage = () => {
             <span
               className={`px-2 py-1 text-xs rounded-full ${
                 representative.verificationDocuments.idCard.verified
-                  ? "bg-green-100 text-green-800"
-                  : "bg-yellow-100 text-yellow-800"
+                  ? "status-success"
+                  : "status-warning"
               }`}
             >
               {representative.verificationDocuments.idCard.verified
@@ -242,8 +242,8 @@ const RepresentativeDashboardPage = () => {
             <span
               className={`px-2 py-1 text-xs rounded-full ${
                 representative.verificationDocuments.certificate.verified
-                  ? "bg-green-100 text-green-800"
-                  : "bg-yellow-100 text-yellow-800"
+                  ? "status-success"
+                  : "status-warning"
               }`}
             >
               {representative.verificationDocuments.certificate.verified
@@ -272,7 +272,7 @@ const RepresentativeDashboardPage = () => {
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  <span className="text-sm text-gray-600">{doc.name}</span>
+                  <span className="text-sm text-secondary">{doc.name}</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <a

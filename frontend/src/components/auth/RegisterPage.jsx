@@ -4,26 +4,35 @@ import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../contexts/ToastContext";
 import AppLayout from "../layouts/AppLayout";
 
-const LoginPage = () => {
+const RegisterPage = () => {
   const [formData, setFormData] = useState({
-    identifier: "",
+    username: "",
+    email: "",
     password: "",
+    confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (formData.password !== formData.confirmPassword) {
+      showToast("Passwords do not match", "error");
+      return;
+    }
 
+    setIsLoading(true);
     try {
-      await login(formData.identifier, formData.password);
-      showToast("Login successful", "success");
-      navigate("/");
+      await register(formData.username, formData.email, formData.password);
+      showToast("Registration successful", "success");
+      navigate("/email-verification");
     } catch (error) {
-      showToast(error.response?.data?.message || "Login failed", "error");
+      showToast(
+        error.response?.data?.message || "Registration failed",
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -37,10 +46,10 @@ const LoginPage = () => {
             {/* Header */}
             <div className="text-center">
               <h1 className="text-2xl font-bold text-text-primary">
-                Welcome Back
+                Create an Account
               </h1>
               <p className="mt-2 text-text-secondary">
-                Sign in to continue to Sauti
+                Join Sauti to connect with your representatives
               </p>
             </div>
 
@@ -48,39 +57,51 @@ const LoginPage = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <label
-                  htmlFor="identifier"
+                  htmlFor="username"
                   className="block text-sm font-medium text-text-primary"
                 >
-                  Email or Username
+                  Username
                 </label>
                 <input
-                  id="identifier"
+                  id="username"
                   type="text"
                   required
                   className="input"
-                  value={formData.identifier}
+                  value={formData.username}
                   onChange={(e) =>
-                    setFormData({ ...formData, identifier: e.target.value })
+                    setFormData({ ...formData, username: e.target.value })
                   }
-                  placeholder="Enter your email or username"
+                  placeholder="Choose a username"
                 />
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-text-primary"
-                  >
-                    Password
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-accent-primary hover:text-accent-secondary transition-base"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-text-primary"
+                >
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  className="input"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-text-primary"
+                >
+                  Password
+                </label>
                 <input
                   id="password"
                   type="password"
@@ -90,7 +111,30 @@ const LoginPage = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, password: e.target.value })
                   }
-                  placeholder="Enter your password"
+                  placeholder="Create a password"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-text-primary"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  required
+                  className="input"
+                  value={formData.confirmPassword}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      confirmPassword: e.target.value,
+                    })
+                  }
+                  placeholder="Confirm your password"
                 />
               </div>
 
@@ -102,7 +146,7 @@ const LoginPage = () => {
                     isLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
-                  {isLoading ? "Signing in..." : "Sign In"}
+                  {isLoading ? "Creating account..." : "Create Account"}
                 </button>
               </div>
             </form>
@@ -160,12 +204,12 @@ const LoginPage = () => {
               </div>
 
               <p className="text-text-secondary">
-                Don't have an account?{" "}
+                Already have an account?{" "}
                 <Link
-                  to="/register"
+                  to="/login"
                   className="text-accent-primary hover:text-accent-secondary transition-base"
                 >
-                  Sign up
+                  Sign in
                 </Link>
               </p>
             </div>
@@ -176,4 +220,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;

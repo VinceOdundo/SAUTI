@@ -1,228 +1,273 @@
-import React, { useState, useEffect, useContext } from "react";
-import { ToastContext } from "../../contexts/ToastContext";
-import NotificationList from "../notifications/NotificationList";
-import NotificationPreferences from "../notifications/NotificationPreferences";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { useToast } from "../../contexts/ToastContext";
+import AppLayout from "../layouts/AppLayout";
+import axios from "axios";
 
 const UserDashboard = () => {
-  const [userData, setUserData] = useState(null);
+  const [stats, setStats] = useState({
+    posts: 0,
+    followers: 0,
+    following: 0,
+    engagement: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("profile");
-  const { showToast } = useContext(ToastContext);
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
   useEffect(() => {
-    fetchUserData();
+    fetchDashboardData();
   }, []);
 
-  const fetchUserData = async () => {
+  const fetchDashboardData = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch("/api/auth/profile", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        setUserData(data.user);
-      } else {
-        showToast(data.message || "Failed to fetch user data", "error");
-      }
+      const [statsResponse, activityResponse] = await Promise.all([
+        axios.get("/api/users/stats"),
+        axios.get("/api/users/activity"),
+      ]);
+      setStats(statsResponse.data);
+      setRecentActivity(activityResponse.data);
     } catch (error) {
-      showToast("Error fetching user data", "error");
+      showToast(
+        error.response?.data?.message || "Failed to fetch dashboard data",
+        "error"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        showToast("Image size should be less than 5MB", "error");
-        return;
+  const StatCard = ({ title, value, icon }) => (
+    <div className="card p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-text-secondary text-sm">{title}</p>
+          <p className="text-2xl font-semibold text-text-primary mt-1">
+            {value}
+          </p>
+        </div>
+        <div className="w-12 h-12 rounded-full bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent-primary">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+
+  const ActivityItem = ({ activity }) => {
+    const getActivityIcon = (type) => {
+      switch (type) {
+        case "post":
+          return (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          );
+        case "like":
+          return (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+          );
+        case "comment":
+          return (
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          );
+        default:
+          return null;
       }
-      setSelectedImage(file);
-      handleImageUpload(file);
-    }
-  };
+    };
 
-  const handleImageUpload = async (file) => {
-    setUploadingImage(true);
-    const formData = new FormData();
-    formData.append("avatar", file);
-
-    try {
-      const response = await fetch("/api/auth/profile/avatar", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showToast("Profile image updated successfully", "success");
-        setUserData((prev) => ({ ...prev, avatar: data.avatar }));
-      } else {
-        showToast(data.message || "Failed to update profile image", "error");
-      }
-    } catch (error) {
-      showToast("Error uploading image", "error");
-    } finally {
-      setUploadingImage(false);
-    }
-  };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case "profile":
-        return (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="relative h-48 bg-blue-600">
-              <div className="absolute -bottom-12 left-8">
-                <div className="relative">
-                  <img
-                    src={userData?.avatar || "/default-avatar.png"}
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full border-4 border-white object-cover"
-                  />
-                  <label className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow-lg cursor-pointer">
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      disabled={uploadingImage}
-                    />
-                    <svg
-                      className="w-5 h-5 text-gray-600"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-16 pb-8 px-8">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {userData?.name}
-              </h1>
-              <p className="text-gray-600">{userData?.email}</p>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Location
-                  </h2>
-                  <div className="mt-2 space-y-2">
-                    <p className="text-gray-600">
-                      <span className="font-medium">County:</span>{" "}
-                      {userData?.county}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Constituency:</span>{" "}
-                      {userData?.constituency}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Ward:</span>{" "}
-                      {userData?.ward}
-                    </p>
-                  </div>
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Contact
-                  </h2>
-                  <div className="mt-2 space-y-2">
-                    <p className="text-gray-600">
-                      <span className="font-medium">Phone:</span>{" "}
-                      {userData?.phoneNumber}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Role:</span>{" "}
-                      {userData?.role}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6">
-                <h2 className="text-lg font-semibold text-gray-900">Bio</h2>
-                <p className="mt-2 text-gray-600">{userData?.bio}</p>
-              </div>
-            </div>
-          </div>
-        );
-      case "notifications":
-        return (
-          <div className="space-y-6">
-            <NotificationList />
-            <NotificationPreferences />
-          </div>
-        );
-      default:
-        return null;
-    }
+    return (
+      <div className="flex items-center space-x-4 p-4 hover:bg-hover-bg rounded-lg transition-base">
+        <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center text-text-secondary">
+          {getActivityIcon(activity.type)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-text-primary truncate">
+            {activity.type === "post"
+              ? "Created a new post"
+              : activity.type === "like"
+              ? "Liked a post"
+              : "Commented on a post"}
+          </p>
+          <p className="text-sm text-text-secondary">
+            {new Date(activity.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        <Link
+          to={`/posts/${activity.postId}`}
+          className="text-accent-primary hover:text-accent-secondary transition-base"
+        >
+          View
+        </Link>
+      </div>
+    );
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
+      <AppLayout>
+        <div className="container py-8">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-accent-primary border-t-transparent"></div>
+          </div>
+        </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Tab Navigation */}
-        <div className="mb-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`${
-                activeTab === "profile"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
-            >
-              Profile
-            </button>
-            <button
-              onClick={() => setActiveTab("notifications")}
-              className={`${
-                activeTab === "notifications"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium`}
-            >
-              Notifications
-            </button>
-          </nav>
+    <AppLayout>
+      <div className="container py-8 space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+            <p className="text-text-secondary mt-1">
+              Welcome back, {user?.username}
+            </p>
+          </div>
+          <Link to="/profile" className="btn btn-primary">
+            Edit Profile
+          </Link>
         </div>
 
-        {/* Content */}
-        {renderContent()}
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            title="Total Posts"
+            value={stats.posts}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+            }
+          />
+          <StatCard
+            title="Followers"
+            value={stats.followers}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            }
+          />
+          <StatCard
+            title="Following"
+            value={stats.following}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+            }
+          />
+          <StatCard
+            title="Engagement Rate"
+            value={`${stats.engagement}%`}
+            icon={
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
+              </svg>
+            }
+          />
+        </div>
+
+        {/* Recent Activity */}
+        <div className="card">
+          <div className="p-6 border-b border-border">
+            <h2 className="text-lg font-semibold text-text-primary">
+              Recent Activity
+            </h2>
+          </div>
+          <div className="divide-y divide-border">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity) => (
+                <ActivityItem key={activity.id} activity={activity} />
+              ))
+            ) : (
+              <div className="p-6 text-center text-text-secondary">
+                No recent activity
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

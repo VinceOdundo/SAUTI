@@ -1,154 +1,206 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import Navigation from "../components/Navigation";
-import { ChevronRightIcon } from "@heroicons/react/20/solid";
-import {
-  ChatBubbleLeftIcon,
-  UserGroupIcon,
-  LightBulbIcon,
-  ShieldCheckIcon,
-} from "@heroicons/react/24/outline";
+import { useToast } from "../contexts/ToastContext";
+import AppLayout from "../components/layouts/AppLayout";
+import axios from "axios";
 
-const features = [
-  {
-    name: "Community Forums",
-    description:
-      "Engage in meaningful discussions about issues that matter to your community.",
-    icon: ChatBubbleLeftIcon,
-  },
-  {
-    name: "Direct Access to Representatives",
-    description:
-      "Connect directly with your elected officials and community leaders.",
-    icon: UserGroupIcon,
-  },
-  {
-    name: "Civic Innovation",
-    description:
-      "Propose and collaborate on solutions to community challenges.",
-    icon: LightBulbIcon,
-  },
-  {
-    name: "Secure & Transparent",
-    description:
-      "Your voice matters. All interactions are secure and traceable.",
-    icon: ShieldCheckIcon,
-  },
-];
+const LandingPage = () => {
+  const [stats, setStats] = useState({
+    users: 0,
+    posts: 0,
+    communities: 0,
+    engagementRate: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const { showToast } = useToast();
 
-export default function LandingPage() {
-  return (
-    <div className="min-h-screen bg-white">
-      <Navigation />
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
-      {/* Hero Section */}
-      <div className="relative bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-            <main className="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block">Your Voice in</span>
-                  <span className="block text-primary-600">
-                    Kenyan Democracy
-                  </span>
-                </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  Sauti connects citizens with their representatives, fostering
-                  meaningful dialogue and participatory democracy in Kenya.
-                </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                  <div className="rounded-md shadow">
-                    <Link
-                      to="/register"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 md:py-4 md:text-lg md:px-10"
-                    >
-                      Get Started
-                    </Link>
-                  </div>
-                  <div className="mt-3 sm:mt-0 sm:ml-3">
-                    <Link
-                      to="/about"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 md:py-4 md:text-lg md:px-10"
-                    >
-                      Learn More
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </main>
-          </div>
-        </div>
-        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <img
-            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-            src="/assets/hero-image.jpg"
-            alt="Democracy in action"
+  const fetchStats = async () => {
+    try {
+      const response = await axios.get("/api/stats/public");
+      setStats(response.data);
+    } catch (error) {
+      showToast(
+        error.response?.data?.message || "Failed to fetch platform stats",
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const features = [
+    {
+      title: "Connect with Representatives",
+      description:
+        "Directly engage with your local representatives and make your voice heard.",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
           />
-        </div>
-      </div>
+        </svg>
+      ),
+    },
+    {
+      title: "Community Discussions",
+      description:
+        "Join meaningful discussions about issues that matter to your community.",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"
+          />
+        </svg>
+      ),
+    },
+    {
+      title: "Location-Based Updates",
+      description:
+        "Stay informed about developments and issues in your local area.",
+      icon: (
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+          />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+          />
+        </svg>
+      ),
+    },
+  ];
 
-      {/* Feature Section */}
-      <div className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="lg:text-center">
-            <h2 className="text-base text-primary-600 font-semibold tracking-wide uppercase">
-              Features
-            </h2>
-            <p className="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              A better way to engage with democracy
-            </p>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
-              Sauti provides the tools you need to make your voice heard and
-              participate in shaping Kenya's future.
-            </p>
+  return (
+    <AppLayout>
+      <div className="container py-12 space-y-24">
+        {/* Hero Section */}
+        <div className=" text-center space-y-8">
+          <h1 className="text-4xl md:text-6xl font-bold text-text-primary">
+            Your Voice in Local Governance
+          </h1>
+          <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+            Connect with your representatives, engage in community discussions,
+            and make a difference in your local area.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/register" className="btn btn-primary">
+              Get Started
+            </Link>
+            <Link to="/about" className="btn btn-secondary">
+              Learn More
+            </Link>
           </div>
-
-          <div className="mt-10">
-            <dl className="space-y-10 md:space-y-0 md:grid md:grid-cols-2 md:gap-x-8 md:gap-y-10">
-              {features.map((feature) => (
-                <div key={feature.name} className="relative">
-                  <dt>
-                    <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white">
-                      <feature.icon className="h-6 w-6" aria-hidden="true" />
-                    </div>
-                    <p className="ml-16 text-lg leading-6 font-medium text-gray-900">
-                      {feature.name}
-                    </p>
-                  </dt>
-                  <dd className="mt-2 ml-16 text-base text-gray-500">
-                    {feature.description}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
         </div>
-      </div>
 
-      {/* CTA Section */}
-      <div className="bg-primary-50">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-            <span className="block">Ready to make a difference?</span>
-            <span className="block text-primary-600">Join Sauti today.</span>
-          </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div className="inline-flex rounded-md shadow">
-              <Link
-                to="/register"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
-              >
-                Get Started
-                <ChevronRightIcon
-                  className="ml-2 -mr-1 h-5 w-5"
-                  aria-hidden="true"
-                />
-              </Link>
+        {/* Stats Section */}
+        {!isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="card p-6 text-center">
+              <div className="text-3xl font-bold text-accent-primary mb-2">
+                {stats.users.toLocaleString()}
+              </div>
+              <div className="text-text-secondary">Active Users</div>
+            </div>
+            <div className="card p-6 text-center">
+              <div className="text-3xl font-bold text-accent-primary mb-2">
+                {stats.posts.toLocaleString()}
+              </div>
+              <div className="text-text-secondary">Community Posts</div>
+            </div>
+            <div className="card p-6 text-center">
+              <div className="text-3xl font-bold text-accent-primary mb-2">
+                {stats.communities.toLocaleString()}
+              </div>
+              <div className="text-text-secondary">Local Communities</div>
+            </div>
+            <div className="card p-6 text-center">
+              <div className="text-3xl font-bold text-accent-primary mb-2">
+                {stats.engagementRate}%
+              </div>
+              <div className="text-text-secondary">Engagement Rate</div>
             </div>
           </div>
+        )}
+
+        {/* Features Section */}
+        <div className="space-y-12">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-text-primary">
+              Why Choose Sauti
+            </h2>
+            <p className="mt-4 text-text-secondary max-w-2xl mx-auto">
+              Our platform provides the tools you need to engage with your local
+              government and community effectively.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <div key={index} className="card p-6 space-y-4">
+                <div className="w-12 h-12 rounded-lg bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent-primary">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-text-primary">
+                  {feature.title}
+                </h3>
+                <p className="text-text-secondary">{feature.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA Section */}
+        <div className="card p-12 text-center space-y-6">
+          <h2 className="text-3xl font-bold text-text-primary">
+            Ready to Make a Difference?
+          </h2>
+          <p className="text-text-secondary max-w-2xl mx-auto">
+            Join Sauti today and become part of a community dedicated to
+            improving local governance and civic engagement.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/register" className="btn btn-primary">
+              Create Account
+            </Link>
+            <Link to="/contact" className="btn btn-secondary">
+              Contact Us
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
-}
+};
+
+export default LandingPage;

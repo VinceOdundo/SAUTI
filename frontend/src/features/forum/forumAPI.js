@@ -1,148 +1,180 @@
 import axios from "axios";
-import { API_URL } from "../../config";
 
-const API = axios.create({
-  baseURL: `${API_URL}/api/forum`,
-  withCredentials: true,
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: "/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-API.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  console.log("Token in interceptor:", token); // Debug log
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  console.log("Final headers:", config.headers); // Debug log
-  return config;
-});
-
-// Create a new post
-export const createPost = async (formData) => {
-  try {
+// Add request interceptor to add auth token
+api.interceptors.request.use(
+  (config) => {
     const token = localStorage.getItem("token");
-    console.log("Token in createPost:", token); // Debug log
-
-    if (!token) {
-      throw new Error("No authentication token found");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
-    const response = await API.post("/posts", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Post creation error details:", {
-      error: error.response?.data || error,
-      status: error.response?.status,
-      headers: error.response?.headers,
-    });
-    throw error.response?.data || error;
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-};
+);
 
-// Get posts with filters and pagination
-export const getPosts = async (params) => {
-  const response = await API.get("/posts", { params });
-  return response.data;
-};
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
-// Get a single post
-export const getPost = async (postId) => {
-  const response = await API.get(`/posts/${postId}`);
-  return response.data;
-};
-
-// Update a post
-export const updatePost = async (postId, formData) => {
-  const response = await API.patch(`/posts/${postId}`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+// Posts
+export const getPosts = async (filter = "all", page = 1, limit = 10) => {
+  const response = await api.get("/posts", {
+    params: { filter, page, limit },
   });
   return response.data;
 };
 
-// Delete a post
+export const getPost = async (postId) => {
+  const response = await api.get(`/posts/${postId}`);
+  return response.data;
+};
+
+export const createPost = async (formData) => {
+  const response = await api.post("/posts", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export const updatePost = async (postId, formData) => {
+  const response = await api.put(`/posts/${postId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
 export const deletePost = async (postId) => {
-  const response = await API.delete(`/posts/${postId}`);
+  const response = await api.delete(`/posts/${postId}`);
   return response.data;
 };
 
-// Vote on a post
-export const votePost = async (postId, vote) => {
-  const response = await API.post(`/posts/${postId}/vote`, { vote });
+export const likePost = async (postId) => {
+  const response = await api.post(`/posts/${postId}/like`);
   return response.data;
 };
 
-// Add a comment
-export const addComment = async (postId, content) => {
-  const response = await API.post(`/posts/${postId}/comments`, { content });
+export const unlikePost = async (postId) => {
+  const response = await api.delete(`/posts/${postId}/like`);
   return response.data;
 };
 
-// Vote on a comment
-export const voteComment = async (postId, commentId, vote) => {
-  const response = await API.post(
-    `/posts/${postId}/comments/${commentId}/vote`,
-    {
-      vote,
-    }
+// Comments
+export const getComments = async (postId, page = 1, limit = 10) => {
+  const response = await api.get(`/posts/${postId}/comments`, {
+    params: { page, limit },
+  });
+  return response.data;
+};
+
+export const createComment = async (postId, content) => {
+  const response = await api.post(`/posts/${postId}/comments`, { content });
+  return response.data;
+};
+
+export const updateComment = async (postId, commentId, content) => {
+  const response = await api.put(`/posts/${postId}/comments/${commentId}`, {
+    content,
+  });
+  return response.data;
+};
+
+export const deleteComment = async (postId, commentId) => {
+  const response = await api.delete(`/posts/${postId}/comments/${commentId}`);
+  return response.data;
+};
+
+export const likeComment = async (postId, commentId) => {
+  const response = await api.post(
+    `/posts/${postId}/comments/${commentId}/like`
   );
   return response.data;
 };
 
-// Report a post
-export const reportPost = async (postId, reason) => {
-  const response = await API.post(`/posts/${postId}/report`, { reason });
+export const unlikeComment = async (postId, commentId) => {
+  const response = await api.delete(
+    `/posts/${postId}/comments/${commentId}/like`
+  );
   return response.data;
 };
 
-// Moderate a post (admin only)
-export const moderatePost = async (postId, action, reason) => {
-  const response = await API.post(`/posts/${postId}/moderate`, {
-    action,
-    reason,
+// Locations
+export const getCounties = async () => {
+  const response = await api.get("/locations/counties");
+  return response.data;
+};
+
+export const getConstituencies = async (county) => {
+  const response = await api.get(`/locations/constituencies/${county}`);
+  return response.data;
+};
+
+export const getWards = async (constituency) => {
+  const response = await api.get(`/locations/wards/${constituency}`);
+  return response.data;
+};
+
+// Representatives
+export const getRepresentatives = async (location) => {
+  const response = await api.get("/representatives", {
+    params: location,
   });
   return response.data;
 };
 
-// Vote on a poll
-export const votePoll = async (postId, optionIndex) => {
-  const response = await API.post(`/posts/${postId}/poll/vote`, {
-    optionIndex,
+export const getRepresentative = async (representativeId) => {
+  const response = await api.get(`/representatives/${representativeId}`);
+  return response.data;
+};
+
+export const followRepresentative = async (representativeId) => {
+  const response = await api.post(
+    `/representatives/${representativeId}/follow`
+  );
+  return response.data;
+};
+
+export const unfollowRepresentative = async (representativeId) => {
+  const response = await api.delete(
+    `/representatives/${representativeId}/follow`
+  );
+  return response.data;
+};
+
+// Search
+export const search = async (query, type = "all", page = 1, limit = 10) => {
+  const response = await api.get("/search", {
+    params: { query, type, page, limit },
   });
   return response.data;
 };
 
-// Reshare a post
-export const resharePost = async (postId, commentary) => {
-  const response = await API.post(`/posts/${postId}/reshare`, { commentary });
+// Stats
+export const getPublicStats = async () => {
+  const response = await api.get("/stats/public");
   return response.data;
 };
 
-// Search posts
-export const searchPosts = async (query) => {
-  const response = await API.get("/posts", {
-    params: {
-      search: query,
-      sort: "relevance",
-    },
-  });
+export const getUserStats = async (userId) => {
+  const response = await api.get(`/stats/users/${userId}`);
   return response.data;
 };
 
-// Get trending hashtags
-export const getTrendingHashtags = async () => {
-  const response = await API.get("/posts/trending-hashtags");
-  return response.data;
-};
-
-// Get post analytics (for representatives)
-export const getPostAnalytics = async (postId) => {
-  const response = await API.get(`/posts/${postId}/analytics`);
-  return response.data;
-};
+export default api;
