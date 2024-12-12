@@ -45,10 +45,10 @@ const RegisterPage = () => {
           <div className="card space-y-8">
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-text-primary">
+              <h1 className="text-2xl font-bold text-primary">
                 Create an Account
               </h1>
-              <p className="mt-2 text-text-secondary">
+              <p className="mt-2 text-secondary">
                 Join Sauti to connect with your representatives
               </p>
             </div>
@@ -58,7 +58,7 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Username
                 </label>
@@ -78,7 +78,7 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Email Address
                 </label>
@@ -98,7 +98,7 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Password
                 </label>
@@ -118,7 +118,7 @@ const RegisterPage = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Confirm Password
                 </label>
@@ -158,7 +158,7 @@ const RegisterPage = () => {
                   <div className="w-full border-t border-border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-bg-primary text-text-secondary">
+                  <span className="px-2 bg-base text-secondary">
                     Or continue with
                   </span>
                 </div>
@@ -203,7 +203,7 @@ const RegisterPage = () => {
                 </button>
               </div>
 
-              <p className="text-text-secondary">
+              <p className="text-secondary">
                 Already have an account?{" "}
                 <Link
                   to="/login"

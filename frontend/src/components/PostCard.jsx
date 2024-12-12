@@ -53,7 +53,7 @@ const PostCard = ({ post }) => {
   };
 
   return (
-    <div className="bg-bg-primary shadow rounded-lg p-6 mb-4 hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-base shadow rounded-lg p-6 mb-4 hover:shadow-lg transition-shadow duration-200">
       {/* Author Info */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -63,10 +63,10 @@ const PostCard = ({ post }) => {
             className="h-10 w-10 rounded-full object-cover border-2 border-accent-primary"
           />
           <div>
-            <p className="font-medium text-text-primary hover:text-accent-primary cursor-pointer">
+            <p className="font-medium text-primary hover:text-accent-primary cursor-pointer">
               {post.author.name}
             </p>
-            <div className="flex items-center space-x-2 text-sm text-text-secondary">
+            <div className="flex items-center space-x-2 text-sm text-secondary">
               <span>
                 {formatDistanceToNow(new Date(post.createdAt), {
                   addSuffix: true,
@@ -91,9 +91,9 @@ const PostCard = ({ post }) => {
       </div>
 
       {/* Post Content */}
-      <div className="text-text-primary">
+      <div className="text-primary">
         <h3 className="text-lg font-semibold mb-2">{post.title}</h3>
-        <p className="text-text-secondary">{post.content}</p>
+        <p className="text-secondary">{post.content}</p>
       </div>
 
       {/* Action Buttons */}
@@ -102,7 +102,7 @@ const PostCard = ({ post }) => {
           className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
             post.userVote === "up"
               ? "text-upvote bg-upvote-bg"
-              : "text-text-secondary hover:bg-hover-bg"
+              : "text-secondary hover:bg-hover-bg"
           }`}
           onClick={() => handleVote("up")}
         >
@@ -114,7 +114,7 @@ const PostCard = ({ post }) => {
           className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
             post.userVote === "down"
               ? "text-downvote bg-downvote-bg"
-              : "text-text-secondary hover:bg-hover-bg"
+              : "text-secondary hover:bg-hover-bg"
           }`}
           onClick={() => handleVote("down")}
         >
@@ -123,7 +123,7 @@ const PostCard = ({ post }) => {
         </button>
 
         <button
-          className="flex items-center space-x-2 px-4 py-2 rounded-md text-text-secondary hover:bg-hover-bg transition-colors duration-200"
+          className="flex items-center space-x-2 px-4 py-2 rounded-md text-secondary hover:bg-hover-bg transition-colors duration-200"
           onClick={() => setShowComments(!showComments)}
         >
           <ChatIcon className="w-5 h-5" />

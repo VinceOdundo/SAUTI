@@ -40,14 +40,14 @@ const RegisterPage = () => {
 
   return (
     <AppLayout>
-      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-bg-secondary px-4 py-12 sm:px-6 lg:px-8">
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-base-secondary px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
-          <div className="bg-bg-primary shadow-sm border border-border rounded-lg px-8 py-6 space-y-6">
+          <div className="bg-base shadow-sm border border-border rounded-lg px-8 py-6 space-y-6">
             <div>
-              <h2 className="text-2xl font-bold text-text-primary text-center">
+              <h2 className="text-2xl font-bold text-primary text-center">
                 Create Account
               </h2>
-              <p className="mt-2 text-sm text-text-secondary text-center">
+              <p className="mt-2 text-sm text-secondary text-center">
                 Already have an account?{" "}
                 <Link
                   to="/login"
@@ -61,7 +61,7 @@ const RegisterPage = () => {
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Full Name
                 </label>
@@ -69,7 +69,7 @@ const RegisterPage = () => {
                   id="name"
                   type="text"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-bg-primary border border-border rounded-md text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({
@@ -82,7 +82,7 @@ const RegisterPage = () => {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Email Address
                 </label>
@@ -90,7 +90,7 @@ const RegisterPage = () => {
                   id="email"
                   type="email"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-bg-primary border border-border rounded-md text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({
@@ -103,7 +103,7 @@ const RegisterPage = () => {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Password
                 </label>
@@ -111,7 +111,7 @@ const RegisterPage = () => {
                   id="password"
                   type="password"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-bg-primary border border-border rounded-md text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({
@@ -124,7 +124,7 @@ const RegisterPage = () => {
               <div>
                 <label
                   htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Confirm Password
                 </label>
@@ -132,7 +132,7 @@ const RegisterPage = () => {
                   id="confirmPassword"
                   type="password"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-bg-primary border border-border rounded-md text-text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
                   value={formData.confirmPassword}
                   onChange={(e) =>
                     setFormData({

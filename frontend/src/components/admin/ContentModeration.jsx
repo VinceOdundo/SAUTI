@@ -163,7 +163,7 @@ const ContentModeration = () => {
         className={`p-4 border rounded-lg ${
           isSelected
             ? "bg-info-bg border-accent-primary"
-            : "bg-bg-primary border-border"
+            : "bg-base border-border"
         }`}
       >
         <div className="flex items-start justify-between">
@@ -176,10 +176,10 @@ const ContentModeration = () => {
             />
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-medium text-text-primary">
+                <span className="font-medium text-primary">
                   {item.author.name}
                 </span>
-                <span className="text-sm text-text-secondary">
+                <span className="text-sm text-secondary">
                   {format(new Date(item.createdAt), "PPp")}
                 </span>
                 <span
@@ -194,8 +194,8 @@ const ContentModeration = () => {
                   {item.severity}
                 </span>
               </div>
-              <p className="mt-1 text-text-secondary">{item.content}</p>
-              <div className="mt-2 text-sm text-text-secondary">
+              <p className="mt-1 text-secondary">{item.content}</p>
+              <div className="mt-2 text-sm text-secondary">
                 <span className="font-medium">Reported by:</span>{" "}
                 {item.reports.length} users
               </div>
@@ -219,7 +219,7 @@ const ContentModeration = () => {
             </button>
             <button
               onClick={() => handleSingleAction(item._id, "ban")}
-              className="p-1 rounded-full text-text-secondary hover:bg-hover-bg"
+              className="p-1 rounded-full text-secondary hover:bg-hover-bg"
               title="Ban User"
             >
               <BanIcon className="h-5 w-5" />
@@ -234,12 +234,10 @@ const ContentModeration = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-text-primary">
-          Content Moderation
-        </h2>
+        <h2 className="text-2xl font-bold text-primary">Content Moderation</h2>
         <button
           onClick={fetchContent}
-          className="flex items-center space-x-2 text-text-secondary hover:text-text-primary"
+          className="flex items-center space-x-2 text-secondary hover:text-primary"
         >
           <RefreshIcon className="h-5 w-5" />
           <span>Refresh</span>
@@ -247,12 +245,12 @@ const ContentModeration = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center space-x-4 bg-bg-primary p-4 rounded-lg shadow-sm">
-        <FilterIcon className="h-5 w-5 text-text-secondary" />
+      <div className="flex items-center space-x-4 bg-base p-4 rounded-lg shadow-sm">
+        <FilterIcon className="h-5 w-5 text-secondary" />
         <select
           value={filters.type}
           onChange={(e) => handleFilterChange("type", e.target.value)}
-          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-base text-primary"
         >
           <option value="all">All Content</option>
           <option value="posts">Posts Only</option>
@@ -262,7 +260,7 @@ const ContentModeration = () => {
         <select
           value={filters.status}
           onChange={(e) => handleFilterChange("status", e.target.value)}
-          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-base text-primary"
         >
           <option value="pending">Pending</option>
           <option value="resolved">Resolved</option>
@@ -272,7 +270,7 @@ const ContentModeration = () => {
         <select
           value={filters.severity}
           onChange={(e) => handleFilterChange("severity", e.target.value)}
-          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-base text-primary"
         >
           <option value="all">All Severity</option>
           <option value="high">High</option>
@@ -283,7 +281,7 @@ const ContentModeration = () => {
         <select
           value={filters.dateRange}
           onChange={(e) => handleFilterChange("dateRange", e.target.value)}
-          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-bg-primary text-text-primary"
+          className="rounded-md border-border text-sm focus:ring-accent-primary focus:border-accent-primary bg-base text-primary"
         >
           <option value="all">All Time</option>
           <option value="today">Today</option>
@@ -294,7 +292,7 @@ const ContentModeration = () => {
 
       {/* Bulk Actions */}
       {selectedItems.size > 0 && (
-        <div className="flex items-center justify-between bg-bg-secondary p-4 rounded-lg">
+        <div className="flex items-center justify-between bg-base-secondary p-4 rounded-lg">
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -302,7 +300,7 @@ const ContentModeration = () => {
               onChange={selectAll}
               className="h-4 w-4 text-accent-primary rounded border-border focus:ring-accent-primary"
             />
-            <span className="text-sm text-text-secondary">
+            <span className="text-sm text-secondary">
               {selectedItems.size} items selected
             </span>
           </div>

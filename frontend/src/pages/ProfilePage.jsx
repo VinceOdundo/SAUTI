@@ -101,7 +101,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-primary">
+      <div className="min-h-screen bg-base">
         <Navigation />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex justify-center">
@@ -113,12 +113,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
+    <div className="min-h-screen bg-base">
       <Navigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
-        <div className="bg-bg-secondary shadow rounded-lg overflow-hidden">
+        <div className="bg-base-secondary shadow rounded-lg overflow-hidden">
           <div className="relative h-32 bg-accent-primary">
             <div className="absolute -bottom-12 left-8">
               <div className="relative">
@@ -133,9 +133,9 @@ export default function ProfilePage() {
                 />
                 <label
                   htmlFor="avatar-upload"
-                  className="absolute bottom-0 right-0 bg-bg-primary rounded-full p-1.5 shadow-sm cursor-pointer hover:bg-hover-bg"
+                  className="absolute bottom-0 right-0 bg-base rounded-full p-1.5 shadow-sm cursor-pointer hover:bg-hover-bg"
                 >
-                  <CameraIcon className="h-5 w-5 text-text-secondary" />
+                  <CameraIcon className="h-5 w-5 text-secondary" />
                   <input
                     id="avatar-upload"
                     type="file"
@@ -148,10 +148,8 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="pt-16 pb-6 px-8">
-            <h1 className="text-2xl font-bold text-text-primary">
-              {profile?.name}
-            </h1>
-            <p className="text-text-secondary">{profile?.email}</p>
+            <h1 className="text-2xl font-bold text-primary">{profile?.name}</h1>
+            <p className="text-secondary">{profile?.email}</p>
           </div>
         </div>
 
@@ -160,13 +158,13 @@ export default function ProfilePage() {
           {Object.entries(stats).map(([key, value]) => (
             <div
               key={key}
-              className="bg-bg-secondary overflow-hidden shadow rounded-lg"
+              className="bg-base-secondary overflow-hidden shadow rounded-lg"
             >
               <div className="px-4 py-5 sm:p-6">
-                <dt className="text-sm font-medium text-text-secondary truncate capitalize">
+                <dt className="text-sm font-medium text-secondary truncate capitalize">
                   {key}
                 </dt>
-                <dd className="mt-1 text-3xl font-semibold text-text-primary">
+                <dd className="mt-1 text-3xl font-semibold text-primary">
                   {value}
                 </dd>
               </div>
@@ -180,7 +178,7 @@ export default function ProfilePage() {
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
-              className="block w-full pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-bg-primary text-text-primary"
+              className="block w-full pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-base text-primary"
             >
               {tabs.map((tab) => (
                 <option key={tab.name}>{tab.name}</option>
@@ -197,14 +195,14 @@ export default function ProfilePage() {
                     className={`${
                       activeTab === tab.name
                         ? "border-accent-primary text-accent-primary"
-                        : "border-transparent text-text-secondary hover:text-text-primary hover:border-border"
+                        : "border-transparent text-secondary hover:text-primary hover:border-border"
                     } group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm`}
                   >
                     <tab.icon
                       className={`${
                         activeTab === tab.name
                           ? "text-accent-primary"
-                          : "text-text-secondary group-hover:text-text-primary"
+                          : "text-secondary group-hover:text-primary"
                       } -ml-0.5 mr-2 h-5 w-5`}
                     />
                     {tab.name}
@@ -218,7 +216,7 @@ export default function ProfilePage() {
         {/* Tab Content */}
         <div className="mt-8">
           {activeTab === "Profile" && (
-            <div className="bg-bg-secondary shadow rounded-lg">
+            <div className="bg-base-secondary shadow rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <Formik
                   initialValues={{
@@ -236,14 +234,14 @@ export default function ProfilePage() {
                       <div>
                         <label
                           htmlFor="name"
-                          className="block text-sm font-medium text-text-primary"
+                          className="block text-sm font-medium text-primary"
                         >
                           Name
                         </label>
                         <Field
                           type="text"
                           name="name"
-                          className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-bg-primary text-text-primary"
+                          className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-base text-primary"
                         />
                         {errors.name && touched.name && (
                           <p className="mt-1 text-sm text-error-text">
@@ -255,14 +253,14 @@ export default function ProfilePage() {
                       <div>
                         <label
                           htmlFor="email"
-                          className="block text-sm font-medium text-text-primary"
+                          className="block text-sm font-medium text-primary"
                         >
                           Email
                         </label>
                         <Field
                           type="email"
                           name="email"
-                          className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-bg-primary text-text-primary"
+                          className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-base text-primary"
                         />
                         {errors.email && touched.email && (
                           <p className="mt-1 text-sm text-error-text">
@@ -274,7 +272,7 @@ export default function ProfilePage() {
                       <div>
                         <label
                           htmlFor="bio"
-                          className="block text-sm font-medium text-text-primary"
+                          className="block text-sm font-medium text-primary"
                         >
                           Bio
                         </label>
@@ -282,7 +280,7 @@ export default function ProfilePage() {
                           as="textarea"
                           name="bio"
                           rows={4}
-                          className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-bg-primary text-text-primary"
+                          className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-base text-primary"
                         />
                         {errors.bio && touched.bio && (
                           <p className="mt-1 text-sm text-error-text">
@@ -295,14 +293,14 @@ export default function ProfilePage() {
                         <div>
                           <label
                             htmlFor="location"
-                            className="block text-sm font-medium text-text-primary"
+                            className="block text-sm font-medium text-primary"
                           >
                             Location
                           </label>
                           <Field
                             type="text"
                             name="location"
-                            className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-bg-primary text-text-primary"
+                            className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-base text-primary"
                           />
                           {errors.location && touched.location && (
                             <p className="mt-1 text-sm text-error-text">
@@ -314,14 +312,14 @@ export default function ProfilePage() {
                         <div>
                           <label
                             htmlFor="phone"
-                            className="block text-sm font-medium text-text-primary"
+                            className="block text-sm font-medium text-primary"
                           >
                             Phone
                           </label>
                           <Field
                             type="tel"
                             name="phone"
-                            className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-bg-primary text-text-primary"
+                            className="mt-1 block w-full border-border rounded-md shadow-sm focus:ring-accent-primary focus:border-accent-primary sm:text-sm bg-base text-primary"
                           />
                           {errors.phone && touched.phone && (
                             <p className="mt-1 text-sm text-error-text">

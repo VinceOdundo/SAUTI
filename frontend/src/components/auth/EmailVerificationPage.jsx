@@ -66,14 +66,14 @@ const EmailVerificationPage = () => {
           <div className="card space-y-8">
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-text-primary">
+              <h1 className="text-2xl font-bold text-primary">
                 {isVerified
                   ? "Email Verified!"
                   : token
                   ? "Verifying Email..."
                   : "Check Your Email"}
               </h1>
-              <p className="mt-2 text-text-secondary">
+              <p className="mt-2 text-secondary">
                 {isVerified
                   ? "Your email has been verified successfully"
                   : token
@@ -101,7 +101,7 @@ const EmailVerificationPage = () => {
                       />
                     </svg>
                   </div>
-                  <p className="text-text-secondary text-sm">
+                  <p className="text-secondary text-sm">
                     Redirecting you to login...
                   </p>
                 </div>
@@ -127,7 +127,7 @@ const EmailVerificationPage = () => {
                     </svg>
                   </div>
                   <div className="space-y-2">
-                    <p className="text-text-secondary">
+                    <p className="text-secondary">
                       Didn't receive the email? Check your spam folder or
                     </p>
                     <button
@@ -152,7 +152,7 @@ const EmailVerificationPage = () => {
 
             {/* Footer */}
             <div className="text-center">
-              <p className="text-text-secondary">
+              <p className="text-secondary">
                 Need help?{" "}
                 <Link
                   to="/contact"

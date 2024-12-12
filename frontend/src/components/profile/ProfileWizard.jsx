@@ -92,10 +92,10 @@ const ProfileWizard = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-text-primary">
+              <h2 className="text-xl font-semibold text-primary">
                 Basic Information
               </h2>
-              <p className="mt-2 text-text-secondary">
+              <p className="mt-2 text-secondary">
                 Let's start with your basic information
               </p>
             </div>
@@ -104,7 +104,7 @@ const ProfileWizard = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="fullName"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Full Name
                 </label>
@@ -124,7 +124,7 @@ const ProfileWizard = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="location"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Location
                 </label>
@@ -148,10 +148,10 @@ const ProfileWizard = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-text-primary">
+              <h2 className="text-xl font-semibold text-primary">
                 Profile Picture
               </h2>
-              <p className="mt-2 text-text-secondary">
+              <p className="mt-2 text-secondary">
                 Add a profile picture to personalize your account
               </p>
             </div>
@@ -199,9 +199,7 @@ const ProfileWizard = () => {
                   onChange={handleImageChange}
                 />
               </div>
-              <p className="text-sm text-text-secondary">
-                Maximum file size: 5MB
-              </p>
+              <p className="text-sm text-secondary">Maximum file size: 5MB</p>
             </div>
           </div>
         );
@@ -210,19 +208,15 @@ const ProfileWizard = () => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-xl font-semibold text-text-primary">
-                About You
-              </h2>
-              <p className="mt-2 text-text-secondary">
-                Tell us more about yourself
-              </p>
+              <h2 className="text-xl font-semibold text-primary">About You</h2>
+              <p className="mt-2 text-secondary">Tell us more about yourself</p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
                 <label
                   htmlFor="bio"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Bio
                 </label>
@@ -239,7 +233,7 @@ const ProfileWizard = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-text-primary">
+                <label className="block text-sm font-medium text-primary">
                   Interests
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -251,7 +245,7 @@ const ProfileWizard = () => {
                       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-base ${
                         formData.interests.includes(interest)
                           ? "bg-accent-primary text-white"
-                          : "bg-bg-secondary text-text-secondary hover:bg-hover-bg"
+                          : "bg-base-secondary text-secondary hover:bg-hover-bg"
                       }`}
                     >
                       {interest}
@@ -287,7 +281,7 @@ const ProfileWizard = () => {
                         ? "bg-accent-primary text-white"
                         : stepNumber < step
                         ? "bg-success-bg text-success-text"
-                        : "bg-bg-secondary text-text-secondary"
+                        : "bg-base-secondary text-secondary"
                     }`}
                   >
                     {stepNumber < step ? (

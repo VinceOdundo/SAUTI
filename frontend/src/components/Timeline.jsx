@@ -126,7 +126,7 @@ const Timeline = () => {
             className={`px-1 py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
               filter === id
                 ? "border-accent-primary text-accent-primary"
-                : "border-transparent text-text-secondary hover:text-text-primary hover:border-border"
+                : "border-transparent text-secondary hover:text-primary hover:border-border"
             }`}
           >
             {label}
@@ -139,7 +139,7 @@ const Timeline = () => {
   const renderPost = (post) => (
     <article
       key={post._id}
-      className="p-6 bg-bg-primary border border-border rounded-lg mb-4 hover:border-border-hover transition-colors duration-200"
+      className="p-6 bg-base border border-border rounded-lg mb-4 hover:border-border-hover transition-colors duration-200"
     >
       <div className="flex items-start space-x-3">
         <Link to={`/profile/${post.author._id}`} className="flex-shrink-0">
@@ -154,23 +154,23 @@ const Timeline = () => {
             <div>
               <Link
                 to={`/profile/${post.author._id}`}
-                className="font-medium text-text-primary hover:text-accent-primary"
+                className="font-medium text-primary hover:text-accent-primary"
               >
                 {post.author.name}
               </Link>
-              <p className="text-sm text-text-secondary">
+              <p className="text-sm text-secondary">
                 {formatDistanceToNow(new Date(post.createdAt), {
                   addSuffix: true,
                 })}
               </p>
             </div>
             {post.location && (
-              <div className="text-sm text-text-secondary">
+              <div className="text-sm text-secondary">
                 📍 {post.location.ward}, {post.location.constituency}
               </div>
             )}
           </div>
-          <p className="mt-2 text-text-primary whitespace-pre-wrap">
+          <p className="mt-2 text-primary whitespace-pre-wrap">
             {post.content}
           </p>
           {post.image && (
@@ -186,7 +186,7 @@ const Timeline = () => {
               className={`flex items-center space-x-2 text-sm ${
                 post.isLiked
                   ? "text-accent-primary"
-                  : "text-text-secondary hover:text-accent-primary"
+                  : "text-secondary hover:text-accent-primary"
               }`}
             >
               <svg
@@ -206,7 +206,7 @@ const Timeline = () => {
             </button>
             <Link
               to={`/post/${post._id}`}
-              className="flex items-center space-x-2 text-sm text-text-secondary hover:text-accent-primary"
+              className="flex items-center space-x-2 text-sm text-secondary hover:text-accent-primary"
             >
               <svg
                 className="w-5 h-5"
@@ -225,7 +225,7 @@ const Timeline = () => {
             </Link>
             <button
               onClick={() => handleShare(post._id)}
-              className="flex items-center space-x-2 text-sm text-text-secondary hover:text-accent-primary"
+              className="flex items-center space-x-2 text-sm text-secondary hover:text-accent-primary"
             >
               <svg
                 className="w-5 h-5"
@@ -273,7 +273,7 @@ const Timeline = () => {
                   <button
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
-                    className={`px-4 py-2 text-sm text-text-primary bg-bg-secondary hover:bg-hover-bg rounded-md transition-colors duration-200 ${
+                    className={`px-4 py-2 text-sm text-primary bg-base-secondary hover:bg-hover-bg rounded-md transition-colors duration-200 ${
                       isLoadingMore ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
@@ -284,9 +284,9 @@ const Timeline = () => {
             </>
           ) : (
             <div className="text-center py-12">
-              <p className="text-text-secondary">No posts to show</p>
+              <p className="text-secondary">No posts to show</p>
               {filter === "following" && (
-                <p className="mt-2 text-text-secondary">
+                <p className="mt-2 text-secondary">
                   Try following some users to see their posts here
                 </p>
               )}

@@ -140,7 +140,7 @@ const ReportedContent = () => {
         <select
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
-          className="block w-48 pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-bg-primary text-text-primary"
+          className="block w-48 pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-base text-primary"
         >
           <option value="all">All Content</option>
           <option value="post">Posts</option>
@@ -151,7 +151,7 @@ const ReportedContent = () => {
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          className="block w-48 pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-bg-primary text-text-primary"
+          className="block w-48 pl-3 pr-10 py-2 text-base border-border focus:outline-none focus:ring-accent-primary focus:border-accent-primary sm:text-sm rounded-md bg-base text-primary"
         >
           <option value="pending">Pending</option>
           <option value="resolved">Resolved</option>
@@ -160,28 +160,28 @@ const ReportedContent = () => {
       </div>
 
       {/* Reports List */}
-      <div className="bg-bg-primary shadow overflow-hidden sm:rounded-md">
+      <div className="bg-base shadow overflow-hidden sm:rounded-md">
         <ul className="divide-y divide-border">
           {reports.map((report) => (
             <li key={report._id} className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">
-                    <span className="text-text-primary font-medium">
+                    <span className="text-primary font-medium">
                       {report.reporter.name}
                     </span>
-                    <span className="text-text-secondary">
+                    <span className="text-secondary">
                       reported {report.type}
                     </span>
                   </div>
-                  <p className="mt-1 text-text-secondary">{report.reason}</p>
+                  <p className="mt-1 text-secondary">{report.reason}</p>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex space-x-2">
                   <button
                     onClick={() => handleAction(report._id, "ignore")}
-                    className="inline-flex items-center px-3 py-2 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-text-secondary bg-bg-secondary hover:bg-hover-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary"
+                    className="inline-flex items-center px-3 py-2 border border-border shadow-sm text-sm leading-4 font-medium rounded-md text-secondary bg-base-secondary hover:bg-hover-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary"
                   >
                     <XIcon className="h-4 w-4 mr-1" />
                     Ignore
@@ -206,7 +206,7 @@ const ReportedContent = () => {
                   {report.type === "user" && (
                     <button
                       onClick={() => handleAction(report._id, "banned")}
-                      className="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md text-text-primary bg-bg-tertiary hover:bg-hover-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-primary"
+                      className="inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md text-primary bg-bg-tertiary hover:bg-hover-bg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-text-primary"
                     >
                       <BanIcon className="h-4 w-4 mr-1" />
                       Ban
@@ -223,7 +223,7 @@ const ReportedContent = () => {
                       ? "bg-warning-bg text-warning-text"
                       : report.status === "resolved"
                       ? "bg-success-bg text-success-text"
-                      : "bg-bg-secondary text-text-secondary"
+                      : "bg-base-secondary text-secondary"
                   }`}
                 >
                   {report.status.charAt(0).toUpperCase() +

@@ -70,11 +70,11 @@ const NotificationPreferences = () => {
 
   const PreferenceToggle = ({ label, type, category, enabled }) => (
     <div className="flex items-center justify-between py-4">
-      <span className="text-text-primary">{label}</span>
+      <span className="text-primary">{label}</span>
       <button
         onClick={() => handleToggle(type, category)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-          enabled ? "bg-accent-primary" : "bg-bg-secondary"
+          enabled ? "bg-accent-primary" : "bg-base-secondary"
         }`}
       >
         <span
@@ -104,10 +104,10 @@ const NotificationPreferences = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">
+            <h1 className="text-2xl font-bold text-primary">
               Notification Preferences
             </h1>
-            <p className="text-text-secondary mt-1">
+            <p className="text-secondary mt-1">
               Customize how you want to be notified
             </p>
           </div>
@@ -119,10 +119,10 @@ const NotificationPreferences = () => {
         {/* Email Preferences */}
         <div className="card">
           <div className="p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-text-primary">
+            <h2 className="text-lg font-semibold text-primary">
               Email Notifications
             </h2>
-            <p className="text-text-secondary mt-1">
+            <p className="text-secondary mt-1">
               Choose which emails you'd like to receive
             </p>
           </div>
@@ -163,10 +163,10 @@ const NotificationPreferences = () => {
         {/* Push Preferences */}
         <div className="card">
           <div className="p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-text-primary">
+            <h2 className="text-lg font-semibold text-primary">
               Push Notifications
             </h2>
-            <p className="text-text-secondary mt-1">
+            <p className="text-secondary mt-1">
               Control your mobile and desktop notifications
             </p>
           </div>

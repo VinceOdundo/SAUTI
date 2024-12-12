@@ -36,10 +36,8 @@ const LoginPage = () => {
           <div className="card space-y-8">
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-text-primary">
-                Welcome Back
-              </h1>
-              <p className="mt-2 text-text-secondary">
+              <h1 className="text-2xl font-bold text-primary">Welcome Back</h1>
+              <p className="mt-2 text-secondary">
                 Sign in to continue to Sauti
               </p>
             </div>
@@ -49,7 +47,7 @@ const LoginPage = () => {
               <div className="space-y-2">
                 <label
                   htmlFor="identifier"
-                  className="block text-sm font-medium text-text-primary"
+                  className="block text-sm font-medium text-primary"
                 >
                   Email or Username
                 </label>
@@ -70,7 +68,7 @@ const LoginPage = () => {
                 <div className="flex items-center justify-between">
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-text-primary"
+                    className="block text-sm font-medium text-primary"
                   >
                     Password
                   </label>
@@ -114,7 +112,7 @@ const LoginPage = () => {
                   <div className="w-full border-t border-border"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-bg-primary text-text-secondary">
+                  <span className="px-2 bg-base text-secondary">
                     Or continue with
                   </span>
                 </div>
@@ -159,7 +157,7 @@ const LoginPage = () => {
                 </button>
               </div>
 
-              <p className="text-text-secondary">
+              <p className="text-secondary">
                 Don't have an account?{" "}
                 <Link
                   to="/register"

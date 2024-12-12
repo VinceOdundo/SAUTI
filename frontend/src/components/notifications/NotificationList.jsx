@@ -141,10 +141,8 @@ const NotificationList = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">
-              Notifications
-            </h1>
-            <p className="text-text-secondary mt-1">
+            <h1 className="text-2xl font-bold text-primary">Notifications</h1>
+            <p className="text-secondary mt-1">
               Stay updated with your latest activities
             </p>
           </div>
@@ -170,7 +168,7 @@ const NotificationList = () => {
               className={`px-4 py-2 rounded-md text-sm font-medium transition-base ${
                 filter === "all"
                   ? "bg-accent-primary text-white"
-                  : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
+                  : "text-secondary hover:text-primary hover:bg-hover-bg"
               }`}
             >
               All
@@ -180,7 +178,7 @@ const NotificationList = () => {
               className={`px-4 py-2 rounded-md text-sm font-medium transition-base ${
                 filter === "unread"
                   ? "bg-accent-primary text-white"
-                  : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
+                  : "text-secondary hover:text-primary hover:bg-hover-bg"
               }`}
             >
               Unread
@@ -210,10 +208,10 @@ const NotificationList = () => {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
+            <h3 className="text-lg font-semibold text-primary mb-2">
               No Notifications
             </h3>
-            <p className="text-text-secondary">
+            <p className="text-secondary">
               {filter === "unread"
                 ? "You have no unread notifications"
                 : "You have no notifications yet"}
@@ -225,14 +223,14 @@ const NotificationList = () => {
               <div
                 key={notification.id}
                 className={`flex items-start space-x-4 p-4 hover:bg-hover-bg transition-base ${
-                  !notification.read ? "bg-bg-secondary" : ""
+                  !notification.read ? "bg-base-secondary" : ""
                 }`}
               >
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center ${
                     !notification.read
                       ? "bg-accent-primary text-white"
-                      : "bg-bg-secondary text-text-secondary"
+                      : "bg-base-secondary text-secondary"
                   }`}
                 >
                   {getNotificationIcon(notification.type)}
@@ -240,7 +238,7 @@ const NotificationList = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-text-primary">
+                      <p className="text-primary">
                         <Link
                           to={`/profile/${notification.actor.id}`}
                           className="font-medium hover:text-accent-primary transition-base"
@@ -249,7 +247,7 @@ const NotificationList = () => {
                         </Link>{" "}
                         {notification.message}
                       </p>
-                      <p className="text-sm text-text-secondary mt-1">
+                      <p className="text-sm text-secondary mt-1">
                         {new Date(notification.createdAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -263,7 +261,7 @@ const NotificationList = () => {
                     )}
                   </div>
                   {notification.content && (
-                    <p className="mt-2 text-text-secondary line-clamp-2">
+                    <p className="mt-2 text-secondary line-clamp-2">
                       {notification.content}
                     </p>
                   )}

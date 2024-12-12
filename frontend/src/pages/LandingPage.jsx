@@ -106,10 +106,10 @@ const LandingPage = () => {
       <div className="container py-12 space-y-24">
         {/* Hero Section */}
         <div className=" text-center space-y-8">
-          <h1 className="text-4xl md:text-6xl font-bold text-text-primary">
+          <h1 className="text-4xl md:text-6xl font-bold text-primary">
             Your Voice in Local Governance
           </h1>
-          <p className="text-xl text-text-secondary max-w-2xl mx-auto">
+          <p className="text-xl text-secondary max-w-2xl mx-auto">
             Connect with your representatives, engage in community discussions,
             and make a difference in your local area.
           </p>
@@ -130,25 +130,25 @@ const LandingPage = () => {
               <div className="text-3xl font-bold text-accent-primary mb-2">
                 {stats.users.toLocaleString()}
               </div>
-              <div className="text-text-secondary">Active Users</div>
+              <div className="text-secondary">Active Users</div>
             </div>
             <div className="card p-6 text-center">
               <div className="text-3xl font-bold text-accent-primary mb-2">
                 {stats.posts.toLocaleString()}
               </div>
-              <div className="text-text-secondary">Community Posts</div>
+              <div className="text-secondary">Community Posts</div>
             </div>
             <div className="card p-6 text-center">
               <div className="text-3xl font-bold text-accent-primary mb-2">
                 {stats.communities.toLocaleString()}
               </div>
-              <div className="text-text-secondary">Local Communities</div>
+              <div className="text-secondary">Local Communities</div>
             </div>
             <div className="card p-6 text-center">
               <div className="text-3xl font-bold text-accent-primary mb-2">
                 {stats.engagementRate}%
               </div>
-              <div className="text-text-secondary">Engagement Rate</div>
+              <div className="text-secondary">Engagement Rate</div>
             </div>
           </div>
         )}
@@ -156,10 +156,10 @@ const LandingPage = () => {
         {/* Features Section */}
         <div className="space-y-12">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-text-primary">
+            <h2 className="text-3xl font-bold text-primary">
               Why Choose Sauti
             </h2>
-            <p className="mt-4 text-text-secondary max-w-2xl mx-auto">
+            <p className="mt-4 text-secondary max-w-2xl mx-auto">
               Our platform provides the tools you need to engage with your local
               government and community effectively.
             </p>
@@ -171,10 +171,10 @@ const LandingPage = () => {
                 <div className="w-12 h-12 rounded-lg bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent-primary">
                   {feature.icon}
                 </div>
-                <h3 className="text-xl font-semibold text-text-primary">
+                <h3 className="text-xl font-semibold text-primary">
                   {feature.title}
                 </h3>
-                <p className="text-text-secondary">{feature.description}</p>
+                <p className="text-secondary">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -182,10 +182,10 @@ const LandingPage = () => {
 
         {/* CTA Section */}
         <div className="card p-12 text-center space-y-6">
-          <h2 className="text-3xl font-bold text-text-primary">
+          <h2 className="text-3xl font-bold text-primary">
             Ready to Make a Difference?
           </h2>
-          <p className="text-text-secondary max-w-2xl mx-auto">
+          <p className="text-secondary max-w-2xl mx-auto">
             Join Sauti today and become part of a community dedicated to
             improving local governance and civic engagement.
           </p>

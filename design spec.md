@@ -115,8 +115,8 @@
 
 ```css
 .btn-secondary {
-  @apply px-4 py-2 text-sm font-medium text-text-primary 
-  bg-bg-secondary hover:bg-hover-bg 
+  @apply px-4 py-2 text-sm font-medium text-primary 
+  bg-base-secondary hover:bg-hover-bg 
   rounded-md transition-colors duration-200;
 }
 ```
@@ -127,9 +127,9 @@
 
 ```css
 .input-field {
-  @apply w-full px-3 py-2 bg-bg-primary 
+  @apply w-full px-3 py-2 bg-base 
   border border-border rounded-md 
-  text-text-primary placeholder-text-secondary 
+  text-primary placeholder-text-secondary 
   focus:outline-none focus:ring-2 focus:ring-accent-primary 
   focus:border-transparent transition-colors duration-200;
 }
@@ -147,7 +147,7 @@
 
 ```css
 .card {
-  @apply bg-bg-primary border border-border rounded-lg 
+  @apply bg-base border border-border rounded-lg 
   p-6 hover:border-border-hover transition-colors duration-200;
 }
 ```

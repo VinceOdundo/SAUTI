@@ -77,9 +77,7 @@ const PostForm = ({ onPost }) => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Header */}
         <div className="p-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-text-primary">
-            Create Post
-          </h2>
+          <h2 className="text-lg font-semibold text-primary">Create Post</h2>
         </div>
 
         {/* Content */}
@@ -89,7 +87,7 @@ const PostForm = ({ onPost }) => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onFocus={() => setIsExpanded(true)}
-            className="w-full min-h-[100px] bg-bg-primary text-text-primary placeholder-text-secondary border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none transition-base"
+            className="w-full min-h-[100px] bg-base text-primary placeholder-text-secondary border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none transition-base"
           />
 
           {isExpanded && (
@@ -106,7 +104,7 @@ const PostForm = ({ onPost }) => {
                     <button
                       type="button"
                       onClick={removeImage}
-                      className="absolute top-2 right-2 p-1 rounded-full bg-bg-primary text-text-secondary hover:text-text-primary transition-base"
+                      className="absolute top-2 right-2 p-1 rounded-full bg-base text-secondary hover:text-primary transition-base"
                     >
                       <svg
                         className="w-5 h-5"
@@ -153,7 +151,7 @@ const PostForm = ({ onPost }) => {
 
               {/* Location Picker */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-text-primary">
+                <label className="block text-sm font-medium text-primary">
                   Location (Optional)
                 </label>
                 <LocationPicker location={location} onChange={setLocation} />

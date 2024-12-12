@@ -7,16 +7,16 @@ const AppLayout = ({ children }) => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-bg-secondary transition-base">
+    <div className="min-h-screen bg-base-secondary transition-base">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-bg-primary border-b border-border transition-base">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-base border-b border-border transition-base">
         <div className="container h-16">
           <div className="flex items-center justify-between h-full">
             {/* Logo and Primary Navigation */}
             <div className="flex items-center space-x-8">
               <Link
                 to="/"
-                className="text-xl font-semibold text-text-primary hover:text-accent-primary transition-base"
+                className="text-xl font-semibold text-primary hover:text-accent-primary transition-base"
               >
                 SAUTI
               </Link>
@@ -25,19 +25,19 @@ const AppLayout = ({ children }) => {
                 <nav className="hidden md:flex space-x-6">
                   <Link
                     to="/dashboard"
-                    className="text-text-secondary hover:text-text-primary transition-base"
+                    className="text-secondary hover:text-primary transition-base"
                   >
                     Dashboard
                   </Link>
                   <Link
                     to="/explore"
-                    className="text-text-secondary hover:text-text-primary transition-base"
+                    className="text-secondary hover:text-primary transition-base"
                   >
                     Explore
                   </Link>
                   <Link
                     to="/representatives"
-                    className="text-text-secondary hover:text-text-primary transition-base"
+                    className="text-secondary hover:text-primary transition-base"
                   >
                     Representatives
                   </Link>
@@ -54,7 +54,7 @@ const AppLayout = ({ children }) => {
                   {/* Notifications */}
                   <Link
                     to="/notifications"
-                    className="p-2 rounded-full text-text-secondary hover:text-text-primary hover:bg-hover-bg transition-base"
+                    className="p-2 rounded-full text-secondary hover:text-primary hover:bg-hover-bg transition-base"
                     title="Notifications"
                   >
                     <svg
@@ -88,13 +88,13 @@ const AppLayout = ({ children }) => {
                 <div className="flex items-center space-x-4">
                   <Link
                     to="/login"
-                    className="text-text-primary hover:text-accent-primary transition-base"
+                    className="text-primary hover:text-accent-primary transition-base"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/register"
-                    className="px-4 py-2 text-white bg-accent-primary hover:bg-accent-secondary rounded-md transition-base"
+                    className="px-4 py-2 text-secondary bg-accent-primary hover:bg-accent-secondary rounded-md transition-base"
                   >
                     Sign Up
                   </Link>
@@ -109,27 +109,27 @@ const AppLayout = ({ children }) => {
       <main className="pt-16 min-h-[calc(100vh-4rem)]">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-bg-primary border-t border-border transition-base">
+      <footer className="bg-base border-t border-border transition-base">
         <div className="container py-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-4">
+              <h3 className="text-lg font-semibold text-primary mb-4">
                 About Sauti
               </h3>
-              <p className="text-text-secondary">
+              <p className="text-secondary">
                 Connecting citizens with their representatives for better
                 governance.
               </p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-4">
+              <h3 className="text-lg font-semibold text-primary mb-4">
                 Quick Links
               </h3>
               <ul className="space-y-2">
                 <li>
                   <Link
                     to="/about"
-                    className="text-text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent-primary transition-base"
                   >
                     About Us
                   </Link>
@@ -137,7 +137,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/contact"
-                    className="text-text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent-primary transition-base"
                   >
                     Contact
                   </Link>
@@ -145,7 +145,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/privacy"
-                    className="text-text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent-primary transition-base"
                   >
                     Privacy Policy
                   </Link>
@@ -153,14 +153,14 @@ const AppLayout = ({ children }) => {
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-4">
+              <h3 className="text-lg font-semibold text-primary mb-4">
                 Resources
               </h3>
               <ul className="space-y-2">
                 <li>
                   <Link
                     to="/help"
-                    className="text-text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent-primary transition-base"
                   >
                     Help Center
                   </Link>
@@ -168,7 +168,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/guidelines"
-                    className="text-text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent-primary transition-base"
                   >
                     Community Guidelines
                   </Link>
@@ -176,7 +176,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/faq"
-                    className="text-text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent-primary transition-base"
                   >
                     FAQs
                   </Link>
@@ -184,7 +184,7 @@ const AppLayout = ({ children }) => {
               </ul>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-4">
+              <h3 className="text-lg font-semibold text-primary mb-4">
                 Connect
               </h3>
               <div className="flex space-x-4">
@@ -192,7 +192,7 @@ const AppLayout = ({ children }) => {
                   href="https://twitter.com/sauti"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-secondary hover:text-accent-primary transition-base"
+                  className="text-secondary hover:text-accent-primary transition-base"
                 >
                   <svg
                     className="w-6 h-6"
@@ -206,7 +206,7 @@ const AppLayout = ({ children }) => {
                   href="https://facebook.com/sauti"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-secondary hover:text-accent-primary transition-base"
+                  className="text-secondary hover:text-accent-primary transition-base"
                 >
                   <svg
                     className="w-6 h-6"
@@ -220,7 +220,7 @@ const AppLayout = ({ children }) => {
                   href="https://linkedin.com/company/sauti"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-text-secondary hover:text-accent-primary transition-base"
+                  className="text-secondary hover:text-accent-primary transition-base"
                 >
                   <svg
                     className="w-6 h-6"
@@ -233,7 +233,7 @@ const AppLayout = ({ children }) => {
               </div>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-border text-center text-text-secondary">
+          <div className="mt-8 pt-8 border-t border-border text-center text-secondary">
             <p>&copy; {new Date().getFullYear()} Sauti. All rights reserved.</p>
           </div>
         </div>

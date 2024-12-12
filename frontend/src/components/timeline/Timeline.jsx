@@ -98,7 +98,7 @@ const Timeline = () => {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-base ${
               filter === "all"
                 ? "bg-accent-primary text-white"
-                : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
+                : "text-secondary hover:text-primary hover:bg-hover-bg"
             }`}
           >
             All Posts
@@ -108,7 +108,7 @@ const Timeline = () => {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-base ${
               filter === "following"
                 ? "bg-accent-primary text-white"
-                : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
+                : "text-secondary hover:text-primary hover:bg-hover-bg"
             }`}
           >
             Following
@@ -118,7 +118,7 @@ const Timeline = () => {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-base ${
               filter === "local"
                 ? "bg-accent-primary text-white"
-                : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
+                : "text-secondary hover:text-primary hover:bg-hover-bg"
             }`}
           >
             Local
@@ -148,10 +148,10 @@ const Timeline = () => {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-text-primary mb-2">
+          <h3 className="text-lg font-semibold text-primary mb-2">
             No Posts Yet
           </h3>
-          <p className="text-text-secondary">
+          <p className="text-secondary">
             {filter === "following"
               ? "Follow more people to see their posts here"
               : filter === "local"
@@ -175,11 +175,11 @@ const Timeline = () => {
                 <div>
                   <Link
                     to={`/profile/${post.author.id}`}
-                    className="font-medium text-text-primary hover:text-accent-primary transition-base"
+                    className="font-medium text-primary hover:text-accent-primary transition-base"
                   >
                     {post.author.username}
                   </Link>
-                  <p className="text-sm text-text-secondary">
+                  <p className="text-sm text-secondary">
                     {new Date(post.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -187,7 +187,7 @@ const Timeline = () => {
 
               {/* Post Content */}
               <div className="space-y-4">
-                <p className="text-text-primary whitespace-pre-wrap">
+                <p className="text-primary whitespace-pre-wrap">
                   {post.content}
                 </p>
                 {post.image && (
@@ -206,7 +206,7 @@ const Timeline = () => {
                   className={`flex items-center space-x-2 text-sm transition-base ${
                     post.isLiked
                       ? "text-accent-primary"
-                      : "text-text-secondary hover:text-text-primary"
+                      : "text-secondary hover:text-primary"
                   }`}
                 >
                   <svg
@@ -227,7 +227,7 @@ const Timeline = () => {
 
                 <Link
                   to={`/posts/${post.id}`}
-                  className="flex items-center space-x-2 text-sm text-text-secondary hover:text-text-primary transition-base"
+                  className="flex items-center space-x-2 text-sm text-secondary hover:text-primary transition-base"
                 >
                   <svg
                     className="w-5 h-5"
@@ -247,7 +247,7 @@ const Timeline = () => {
 
                 <button
                   onClick={() => handleShare(post.id)}
-                  className="flex items-center space-x-2 text-sm text-text-secondary hover:text-text-primary transition-base"
+                  className="flex items-center space-x-2 text-sm text-secondary hover:text-primary transition-base"
                 >
                   <svg
                     className="w-5 h-5"
@@ -280,23 +280,21 @@ const Timeline = () => {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       </Link>
-                      <div className="flex-1 bg-bg-secondary rounded-lg p-3">
+                      <div className="flex-1 bg-base-secondary rounded-lg p-3">
                         <Link
                           to={`/profile/${comment.author.id}`}
-                          className="font-medium text-text-primary hover:text-accent-primary transition-base"
+                          className="font-medium text-primary hover:text-accent-primary transition-base"
                         >
                           {comment.author.username}
                         </Link>
-                        <p className="text-text-primary mt-1">
-                          {comment.content}
-                        </p>
+                        <p className="text-primary mt-1">{comment.content}</p>
                       </div>
                     </div>
                   ))}
                   {post.comments.length > 2 && (
                     <Link
                       to={`/posts/${post.id}`}
-                      className="block text-sm text-text-secondary hover:text-accent-primary transition-base"
+                      className="block text-sm text-secondary hover:text-accent-primary transition-base"
                     >
                       View all {post.comments.length} comments
                     </Link>

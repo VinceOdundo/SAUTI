@@ -38,10 +38,10 @@ const ForgotPasswordPage = () => {
           <div className="card space-y-8">
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-text-primary">
+              <h1 className="text-2xl font-bold text-primary">
                 Reset Your Password
               </h1>
-              <p className="mt-2 text-text-secondary">
+              <p className="mt-2 text-secondary">
                 Enter your email address and we'll send you instructions to
                 reset your password
               </p>
@@ -53,7 +53,7 @@ const ForgotPasswordPage = () => {
                 <div className="space-y-2">
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium text-text-primary"
+                    className="block text-sm font-medium text-primary"
                   >
                     Email Address
                   </label>
@@ -97,10 +97,10 @@ const ForgotPasswordPage = () => {
                     />
                   </svg>
                 </div>
-                <p className="text-text-primary">
+                <p className="text-primary">
                   Check your email for password reset instructions
                 </p>
-                <p className="text-text-secondary text-sm">
+                <p className="text-secondary text-sm">
                   If you don't see the email, check your spam folder
                 </p>
               </div>
@@ -108,7 +108,7 @@ const ForgotPasswordPage = () => {
 
             {/* Footer */}
             <div className="text-center">
-              <p className="text-text-secondary">
+              <p className="text-secondary">
                 Remember your password?{" "}
                 <Link
                   to="/login"

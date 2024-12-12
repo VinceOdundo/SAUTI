@@ -9,8 +9,8 @@ const ThemeToggle = ({ className = "" }) => {
       onClick={toggleTheme}
       className={`p-2 rounded-full transition-base focus-ring ${
         theme === "light"
-          ? "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
-          : "text-text-secondary hover:text-text-primary hover:bg-hover-bg"
+          ? "text-secondary hover:text-primary hover:bg-hover-bg"
+          : "text-secondary hover:text-primary hover:bg-hover-bg"
       } ${className}`}
       title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
       aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}

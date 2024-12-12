@@ -31,11 +31,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center bg-bg-primary py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex flex-col justify-center bg-base py-12 px-4 sm:px-6 lg:px-8">
       <AuthNav isAuthenticated={false} />
-      <div className="max-w-md w-full space-y-8 bg-bg-secondary p-8 rounded-xl border border-border">
+      <div className="max-w-md w-full space-y-8 bg-base-secondary p-8 rounded-xl border border-border">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-text-primary">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-primary">
             Sign in to your account
           </h2>
         </div>
@@ -49,7 +49,7 @@ const LoginPage = () => {
             <div>
               <label
                 htmlFor="email"
-                className="text-text-secondary text-sm font-medium"
+                className="text-secondary text-sm font-medium"
               >
                 Email
               </label>
@@ -58,7 +58,7 @@ const LoginPage = () => {
                 name="email"
                 id="email"
                 required
-                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-border bg-bg-primary text-text-primary rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary"
+                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-border bg-base text-primary rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary"
                 value={credentials.email}
                 onChange={handleChange}
               />
@@ -66,7 +66,7 @@ const LoginPage = () => {
             <div>
               <label
                 htmlFor="password"
-                className="text-text-secondary text-sm font-medium"
+                className="text-secondary text-sm font-medium"
               >
                 Password
               </label>
@@ -75,7 +75,7 @@ const LoginPage = () => {
                 name="password"
                 id="password"
                 required
-                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-border bg-bg-primary text-text-primary rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary"
+                className="appearance-none relative block w-full mt-1 px-3 py-2 border border-border bg-base text-primary rounded-lg focus:outline-none focus:ring-accent-primary focus:border-accent-primary"
                 value={credentials.password}
                 onChange={handleChange}
               />

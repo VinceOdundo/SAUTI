@@ -44,10 +44,8 @@ const UserDashboard = () => {
     <div className="card p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-text-secondary text-sm">{title}</p>
-          <p className="text-2xl font-semibold text-text-primary mt-1">
-            {value}
-          </p>
+          <p className="text-secondary text-sm">{title}</p>
+          <p className="text-2xl font-semibold text-primary mt-1">{value}</p>
         </div>
         <div className="w-12 h-12 rounded-full bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent-primary">
           {icon}
@@ -114,18 +112,18 @@ const UserDashboard = () => {
 
     return (
       <div className="flex items-center space-x-4 p-4 hover:bg-hover-bg rounded-lg transition-base">
-        <div className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center text-text-secondary">
+        <div className="w-10 h-10 rounded-full bg-base-secondary flex items-center justify-center text-secondary">
           {getActivityIcon(activity.type)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-text-primary truncate">
+          <p className="text-primary truncate">
             {activity.type === "post"
               ? "Created a new post"
               : activity.type === "like"
               ? "Liked a post"
               : "Commented on a post"}
           </p>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-secondary">
             {new Date(activity.createdAt).toLocaleDateString()}
           </p>
         </div>
@@ -157,8 +155,8 @@ const UserDashboard = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
-            <p className="text-text-secondary mt-1">
+            <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
+            <p className="text-secondary mt-1">
               Welcome back, {user?.username}
             </p>
           </div>
@@ -250,7 +248,7 @@ const UserDashboard = () => {
         {/* Recent Activity */}
         <div className="card">
           <div className="p-6 border-b border-border">
-            <h2 className="text-lg font-semibold text-text-primary">
+            <h2 className="text-lg font-semibold text-primary">
               Recent Activity
             </h2>
           </div>
@@ -260,7 +258,7 @@ const UserDashboard = () => {
                 <ActivityItem key={activity.id} activity={activity} />
               ))
             ) : (
-              <div className="p-6 text-center text-text-secondary">
+              <div className="p-6 text-center text-secondary">
                 No recent activity
               </div>
             )}

@@ -48,10 +48,10 @@ const ResetPasswordPage = () => {
           <div className="card space-y-8">
             {/* Header */}
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-text-primary">
+              <h1 className="text-2xl font-bold text-primary">
                 Reset Your Password
               </h1>
-              <p className="mt-2 text-text-secondary">
+              <p className="mt-2 text-secondary">
                 Enter your new password below
               </p>
             </div>
@@ -62,7 +62,7 @@ const ResetPasswordPage = () => {
                 <div className="space-y-2">
                   <label
                     htmlFor="password"
-                    className="block text-sm font-medium text-text-primary"
+                    className="block text-sm font-medium text-primary"
                   >
                     New Password
                   </label>
@@ -82,7 +82,7 @@ const ResetPasswordPage = () => {
                 <div className="space-y-2">
                   <label
                     htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-text-primary"
+                    className="block text-sm font-medium text-primary"
                   >
                     Confirm New Password
                   </label>
@@ -131,10 +131,10 @@ const ResetPasswordPage = () => {
                     />
                   </svg>
                 </div>
-                <p className="text-text-primary">
+                <p className="text-primary">
                   Your password has been reset successfully
                 </p>
-                <p className="text-text-secondary text-sm">
+                <p className="text-secondary text-sm">
                   Redirecting you to login...
                 </p>
               </div>
@@ -142,7 +142,7 @@ const ResetPasswordPage = () => {
 
             {/* Footer */}
             <div className="text-center">
-              <p className="text-text-secondary">
+              <p className="text-secondary">
                 Remember your password?{" "}
                 <Link
                   to="/login"

@@ -99,7 +99,7 @@ const LocationPicker = ({ location, onChange }) => {
       <div className="space-y-2">
         <label
           htmlFor="county"
-          className="block text-sm font-medium text-text-primary"
+          className="block text-sm font-medium text-primary"
         >
           County
         </label>
@@ -108,7 +108,7 @@ const LocationPicker = ({ location, onChange }) => {
           name="county"
           value={location.county}
           onChange={handleChange}
-          className="w-full bg-bg-primary text-text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
+          className="w-full bg-base text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
         >
           <option value="">Select County</option>
           {counties.map((county) => (
@@ -124,7 +124,7 @@ const LocationPicker = ({ location, onChange }) => {
         <div className="space-y-2">
           <label
             htmlFor="constituency"
-            className="block text-sm font-medium text-text-primary"
+            className="block text-sm font-medium text-primary"
           >
             Constituency
           </label>
@@ -133,7 +133,7 @@ const LocationPicker = ({ location, onChange }) => {
             name="constituency"
             value={location.constituency}
             onChange={handleChange}
-            className="w-full bg-bg-primary text-text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
+            className="w-full bg-base text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
           >
             <option value="">Select Constituency</option>
             {constituencies.map((constituency) => (
@@ -150,7 +150,7 @@ const LocationPicker = ({ location, onChange }) => {
         <div className="space-y-2">
           <label
             htmlFor="ward"
-            className="block text-sm font-medium text-text-primary"
+            className="block text-sm font-medium text-primary"
           >
             Ward
           </label>
@@ -159,7 +159,7 @@ const LocationPicker = ({ location, onChange }) => {
             name="ward"
             value={location.ward}
             onChange={handleChange}
-            className="w-full bg-bg-primary text-text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
+            className="w-full bg-base text-primary border border-border rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary transition-base"
           >
             <option value="">Select Ward</option>
             {wards.map((ward) => (

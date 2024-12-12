@@ -71,17 +71,17 @@ const ForumFilters = ({ filters, onFilterChange }) => {
   };
 
   return (
-    <div className="bg-bg-primary rounded-lg shadow p-6 space-y-6">
+    <div className="bg-base rounded-lg shadow p-6 space-y-6">
       {/* Sort */}
       <div>
-        <h3 className="text-sm font-medium text-text-primary mb-3 flex items-center">
+        <h3 className="text-sm font-medium text-primary mb-3 flex items-center">
           <ViewListIcon className="w-5 h-5 mr-2" />
           Sort By
         </h3>
         <select
           value={filters.sort}
           onChange={handleSortChange}
-          className="w-full rounded-md border-border py-2 px-3 text-sm text-text-primary bg-bg-primary focus:border-accent-primary focus:ring-accent-primary"
+          className="w-full rounded-md border-border py-2 px-3 text-sm text-primary bg-base focus:border-accent-primary focus:ring-accent-primary"
         >
           {sortOptions.map((option) => (
             <option key={option.value} value={option.value}>
@@ -93,7 +93,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
 
       {/* Categories */}
       <div>
-        <h3 className="text-sm font-medium text-text-primary mb-3 flex items-center">
+        <h3 className="text-sm font-medium text-primary mb-3 flex items-center">
           <FilterIcon className="w-5 h-5 mr-2" />
           Categories
         </h3>
@@ -105,7 +105,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
               className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                 filters.category === category
                   ? "bg-info-bg text-accent-primary"
-                  : "text-text-secondary hover:bg-hover-bg"
+                  : "text-secondary hover:bg-hover-bg"
               }`}
             >
               {category.charAt(0).toUpperCase() + category.slice(1)}
@@ -116,7 +116,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
 
       {/* Visibility */}
       <div>
-        <h3 className="text-sm font-medium text-text-primary mb-3 flex items-center">
+        <h3 className="text-sm font-medium text-primary mb-3 flex items-center">
           <LocationMarkerIcon className="w-5 h-5 mr-2" />
           Location Filter
         </h3>
@@ -128,7 +128,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
               className={`w-full flex items-center px-3 py-2 rounded-md text-sm ${
                 filters.visibility === option.value
                   ? "bg-info-bg text-accent-primary"
-                  : "text-text-secondary hover:bg-hover-bg"
+                  : "text-secondary hover:bg-hover-bg"
               }`}
             >
               <option.icon className="w-5 h-5 mr-2" />
@@ -140,7 +140,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
 
       {/* Tags */}
       <div>
-        <h3 className="text-sm font-medium text-text-primary mb-3 flex items-center">
+        <h3 className="text-sm font-medium text-primary mb-3 flex items-center">
           <TagIcon className="w-5 h-5 mr-2" />
           Tags
         </h3>
@@ -162,7 +162,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
           <input
             type="text"
             placeholder="Add tag..."
-            className="w-full mt-2 px-3 py-2 border border-border rounded-md text-sm text-text-primary bg-bg-primary focus:border-accent-primary focus:ring-accent-primary"
+            className="w-full mt-2 px-3 py-2 border border-border rounded-md text-sm text-primary bg-base focus:border-accent-primary focus:ring-accent-primary"
             onKeyPress={(e) => {
               if (e.key === "Enter" && e.target.value.trim()) {
                 handleTagAdd(e.target.value.trim().toLowerCase());
