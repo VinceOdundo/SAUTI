@@ -172,7 +172,7 @@ const ContentModeration = () => {
               type="checkbox"
               checked={isSelected}
               onChange={() => toggleSelectItem(item._id)}
-              className="h-4 w-4 text-accent-primary rounded border-border focus:ring-accent-primary"
+              className="h-4 w-4 text-accent rounded border-border focus:ring-accent-primary"
             />
             <div>
               <div className="flex items-center space-x-2">
@@ -298,7 +298,7 @@ const ContentModeration = () => {
               type="checkbox"
               checked={selectedItems.size === content.length}
               onChange={selectAll}
-              className="h-4 w-4 text-accent-primary rounded border-border focus:ring-accent-primary"
+              className="h-4 w-4 text-accent rounded border-border focus:ring-accent-primary"
             />
             <span className="text-sm text-secondary">
               {selectedItems.size} items selected

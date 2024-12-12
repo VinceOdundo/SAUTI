@@ -194,14 +194,14 @@ export default function ProfilePage() {
                     onClick={() => setActiveTab(tab.name)}
                     className={`${
                       activeTab === tab.name
-                        ? "border-accent-primary text-accent-primary"
+                        ? "border-accent-primary text-accent -primary"
                         : "border-transparent text-secondary hover:text-primary hover:border-border"
                     } group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm`}
                   >
                     <tab.icon
                       className={`${
                         activeTab === tab.name
-                          ? "text-accent-primary"
+                          ? "text-accent -primary"
                           : "text-secondary group-hover:text-primary"
                       } -ml-0.5 mr-2 h-5 w-5`}
                     />

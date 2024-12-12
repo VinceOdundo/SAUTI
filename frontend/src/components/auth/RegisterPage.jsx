@@ -207,7 +207,7 @@ const RegisterPage = () => {
                 Already have an account?{" "}
                 <Link
                   to="/login"
-                  className="text-accent-primary hover:text-accent-secondary transition-base"
+                  className="text-accent hover:text-accent -secondary transition-base"
                 >
                   Sign in
                 </Link>

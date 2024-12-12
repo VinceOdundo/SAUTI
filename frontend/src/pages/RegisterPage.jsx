@@ -42,34 +42,28 @@ const RegisterPage = () => {
     <AppLayout>
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-base-secondary px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-md">
-          <div className="bg-base shadow-sm border border-border rounded-lg px-8 py-6 space-y-6">
+          <div className="card">
             <div>
               <h2 className="text-2xl font-bold text-primary text-center">
                 Create Account
               </h2>
               <p className="mt-2 text-sm text-secondary text-center">
                 Already have an account?{" "}
-                <Link
-                  to="/login"
-                  className="text-accent-primary hover:text-accent-secondary"
-                >
+                <Link to="/login" className="link">
                   Sign in
                 </Link>
               </p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-primary"
-                >
+                <label htmlFor="name" className="form-label">
                   Full Name
                 </label>
                 <input
                   id="name"
                   type="text"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="input"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({
@@ -80,17 +74,14 @@ const RegisterPage = () => {
                 />
               </div>
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-primary"
-                >
+                <label htmlFor="email" className="form-label">
                   Email Address
                 </label>
                 <input
                   id="email"
                   type="email"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="input"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({
@@ -101,17 +92,14 @@ const RegisterPage = () => {
                 />
               </div>
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-primary"
-                >
+                <label htmlFor="password" className="form-label">
                   Password
                 </label>
                 <input
                   id="password"
                   type="password"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="input"
                   value={formData.password}
                   onChange={(e) =>
                     setFormData({
@@ -122,17 +110,14 @@ const RegisterPage = () => {
                 />
               </div>
               <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-primary"
-                >
+                <label htmlFor="confirmPassword" className="form-label">
                   Confirm Password
                 </label>
                 <input
                   id="confirmPassword"
                   type="password"
                   required
-                  className="mt-1 block w-full px-3 py-2 bg-base border border-border rounded-md text-primary placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-colors duration-200"
+                  className="input"
                   value={formData.confirmPassword}
                   onChange={(e) =>
                     setFormData({
@@ -145,7 +130,7 @@ const RegisterPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent-primary hover:bg-accent-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary transition-colors duration-200 ${
+                className={`btn btn-primary w-full ${
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >

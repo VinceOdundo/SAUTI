@@ -63,7 +63,7 @@ const PostCard = ({ post }) => {
             className="h-10 w-10 rounded-full object-cover border-2 border-accent-primary"
           />
           <div>
-            <p className="font-medium text-primary hover:text-accent-primary cursor-pointer">
+            <p className="font-medium text-primary hover:text-accent cursor-pointer">
               {post.author.name}
             </p>
             <div className="flex items-center space-x-2 text-sm text-secondary">
@@ -84,7 +84,7 @@ const PostCard = ({ post }) => {
 
         {/* Category Badge */}
         {post.category && (
-          <span className="px-3 py-1 text-sm font-medium text-accent-primary bg-info-bg rounded-full">
+          <span className="px-3 py-1 text-sm font-medium text-accent bg-info-bg rounded-full">
             {post.category.charAt(0).toUpperCase() + post.category.slice(1)}
           </span>
         )}

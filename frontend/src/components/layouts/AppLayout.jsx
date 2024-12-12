@@ -16,7 +16,7 @@ const AppLayout = ({ children }) => {
             <div className="flex items-center space-x-8">
               <Link
                 to="/"
-                className="text-xl font-semibold text-primary hover:text-accent-primary transition-base"
+                className="text-xl font-semibold text-primary hover:text-accent transition-base"
               >
                 SAUTI
               </Link>
@@ -88,7 +88,7 @@ const AppLayout = ({ children }) => {
                 <div className="flex items-center space-x-4">
                   <Link
                     to="/login"
-                    className="text-primary hover:text-accent-primary transition-base"
+                    className="text-primary hover:text-accent transition-base"
                   >
                     Sign In
                   </Link>
@@ -129,7 +129,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/about"
-                    className="text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent transition-base"
                   >
                     About Us
                   </Link>
@@ -137,7 +137,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/contact"
-                    className="text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent transition-base"
                   >
                     Contact
                   </Link>
@@ -145,7 +145,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/privacy"
-                    className="text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent transition-base"
                   >
                     Privacy Policy
                   </Link>
@@ -160,7 +160,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/help"
-                    className="text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent transition-base"
                   >
                     Help Center
                   </Link>
@@ -168,7 +168,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/guidelines"
-                    className="text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent transition-base"
                   >
                     Community Guidelines
                   </Link>
@@ -176,7 +176,7 @@ const AppLayout = ({ children }) => {
                 <li>
                   <Link
                     to="/faq"
-                    className="text-secondary hover:text-accent-primary transition-base"
+                    className="text-secondary hover:text-accent transition-base"
                   >
                     FAQs
                   </Link>
@@ -192,7 +192,7 @@ const AppLayout = ({ children }) => {
                   href="https://twitter.com/sauti"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-secondary hover:text-accent-primary transition-base"
+                  className="text-secondary hover:text-accent transition-base"
                 >
                   <svg
                     className="w-6 h-6"
@@ -206,7 +206,7 @@ const AppLayout = ({ children }) => {
                   href="https://facebook.com/sauti"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-secondary hover:text-accent-primary transition-base"
+                  className="text-secondary hover:text-accent transition-base"
                 >
                   <svg
                     className="w-6 h-6"
@@ -220,7 +220,7 @@ const AppLayout = ({ children }) => {
                   href="https://linkedin.com/company/sauti"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-secondary hover:text-accent-primary transition-base"
+                  className="text-secondary hover:text-accent transition-base"
                 >
                   <svg
                     className="w-6 h-6"

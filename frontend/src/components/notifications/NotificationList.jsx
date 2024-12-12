@@ -241,7 +241,7 @@ const NotificationList = () => {
                       <p className="text-primary">
                         <Link
                           to={`/profile/${notification.actor.id}`}
-                          className="font-medium hover:text-accent-primary transition-base"
+                          className="font-medium hover:text-accent transition-base"
                         >
                           {notification.actor.username}
                         </Link>{" "}
@@ -254,7 +254,7 @@ const NotificationList = () => {
                     {!notification.read && (
                       <button
                         onClick={() => markAsRead(notification.id)}
-                        className="text-sm text-accent-primary hover:text-accent-secondary transition-base"
+                        className="text-sm text-accent hover:text-accent -secondary transition-base"
                       >
                         Mark as Read
                       </button>

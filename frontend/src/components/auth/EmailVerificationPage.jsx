@@ -156,7 +156,7 @@ const EmailVerificationPage = () => {
                 Need help?{" "}
                 <Link
                   to="/contact"
-                  className="text-accent-primary hover:text-accent-secondary transition-base"
+                  className="text-accent hover:text-accent -secondary transition-base"
                 >
                   Contact Support
                 </Link>

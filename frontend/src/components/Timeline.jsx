@@ -125,7 +125,7 @@ const Timeline = () => {
             }}
             className={`px-1 py-4 text-sm font-medium border-b-2 whitespace-nowrap ${
               filter === id
-                ? "border-accent-primary text-accent-primary"
+                ? "border-accent-primary text-accent -primary"
                 : "border-transparent text-secondary hover:text-primary hover:border-border"
             }`}
           >
@@ -154,7 +154,7 @@ const Timeline = () => {
             <div>
               <Link
                 to={`/profile/${post.author._id}`}
-                className="font-medium text-primary hover:text-accent-primary"
+                className="font-medium text-primary hover:text-accent -primary"
               >
                 {post.author.name}
               </Link>
@@ -185,8 +185,8 @@ const Timeline = () => {
               onClick={() => handleLike(post._id)}
               className={`flex items-center space-x-2 text-sm ${
                 post.isLiked
-                  ? "text-accent-primary"
-                  : "text-secondary hover:text-accent-primary"
+                  ? "text-accent -primary"
+                  : "text-secondary hover:text-accent -primary"
               }`}
             >
               <svg
@@ -206,7 +206,7 @@ const Timeline = () => {
             </button>
             <Link
               to={`/post/${post._id}`}
-              className="flex items-center space-x-2 text-sm text-secondary hover:text-accent-primary"
+              className="flex items-center space-x-2 text-sm text-secondary hover:text-accent -primary"
             >
               <svg
                 className="w-5 h-5"
@@ -225,7 +225,7 @@ const Timeline = () => {
             </Link>
             <button
               onClick={() => handleShare(post._id)}
-              className="flex items-center space-x-2 text-sm text-secondary hover:text-accent-primary"
+              className="flex items-center space-x-2 text-sm text-secondary hover:text-accent -primary"
             >
               <svg
                 className="w-5 h-5"

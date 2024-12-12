@@ -110,23 +110,26 @@ const ReportedContent = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 p-4 rounded-md">
+      <div className="bg-error-bg p-4 rounded-md">
         <div className="flex">
           <div className="flex-shrink-0">
-            <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+            <XCircleIcon
+              className="h-5 w-5 text-error-text"
+              aria-hidden="true"
+            />
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-red-800">
+            <h3 className="text-sm font-medium text-error-text">
               Error loading reports
             </h3>
-            <div className="mt-2 text-sm text-red-700">{error}</div>
+            <div className="mt-2 text-sm text-error-text">{error}</div>
           </div>
         </div>
       </div>

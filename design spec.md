@@ -2,39 +2,80 @@
 
 ## 1. Color System
 
-### Primary Colors
+### Light Mode Colors (Default)
 
 ```css
-/* Theme Variables */
---accent-primary: #0969da; /* Primary brand color, used for CTAs, links, and important actions */
---accent-secondary: #218bff; /* Secondary brand color, used for hover states */
+/* Background Colors */
+--light-bg-primary: #ffffff; /* Main background */
+--light-bg-secondary: #f6f8fa; /* Secondary background */
+--light-bg-tertiary: #f0f2f4; /* Tertiary background */
+
+/* Text Colors */
+--light-text-primary: #24292f; /* Primary text */
+--light-text-secondary: #57606a; /* Secondary text */
+
+/* Accent Colors */
+--light-accent-primary: #0969da; /* Primary accent */
+--light-accent-secondary: #218bff; /* Secondary accent */
+
+/* Border & Effects */
+--light-border: #d0d7de;
+--light-hover-bg: #f3f4f6;
+--light-shadow: rgba(31, 35, 40, 0.04);
+
+/* Status Colors */
+--light-success-bg: #dcfce7;
+--light-success-text: #166534;
+--light-warning-bg: #fef3c7;
+--light-warning-text: #92400e;
+--light-error-bg: #fee2e2;
+--light-error-text: #991b1b;
+--light-info-bg: #dbeafe;
+--light-info-text: #1e40af;
+
+/* Interactive Colors */
+--light-upvote: #059669;
+--light-upvote-bg: #ecfdf5;
+--light-downvote: #dc2626;
+--light-downvote-bg: #fef2f2;
 ```
 
-### Background Colors
+### Dark Mode Colors
 
 ```css
---bg-primary: #ffffff; /* Main background color (Light Mode) */
---bg-secondary: #f6f8fa; /* Secondary background, used for cards and sections */
---bg-tertiary: #f0f2f4; /* Tertiary background, used for interactive elements */
---dark-bg-primary: #0d1117; /* Main background color (Dark Mode) */
---dark-bg-secondary: #161b22; /* Secondary background (Dark Mode) */
---dark-bg-tertiary: #21262d; /* Tertiary background (Dark Mode) */
-```
+/* Background Colors */
+--dark-bg-primary: #0d1117; /* Main background */
+--dark-bg-secondary: #161b22; /* Secondary background */
+--dark-bg-tertiary: #21262d; /* Tertiary background */
 
-### Text Colors
+/* Text Colors */
+--dark-text-primary: #c9d1d9; /* Primary text */
+--dark-text-secondary: #8b949e; /* Secondary text */
 
-```css
---text-primary: #24292f; /* Primary text color */
---text-secondary: #57606a; /* Secondary text color, used for less emphasis */
---dark-text-primary: #c9d1d9; /* Primary text color (Dark Mode) */
---dark-text-secondary: #8b949e; /* Secondary text color (Dark Mode) */
-```
+/* Accent Colors */
+--dark-accent-primary: #58a6ff; /* Primary accent */
+--dark-accent-secondary: #1f6feb; /* Secondary accent */
 
-### Border Colors
+/* Border & Effects */
+--dark-border: #30363d;
+--dark-hover-bg: #1f2937;
+--dark-shadow: rgba(0, 0, 0, 0.3);
 
-```css
---border: #d0d7de; /* Default border color */
---dark-border: #30363d; /* Border color (Dark Mode) */
+/* Status Colors */
+--dark-success-bg: #065f46;
+--dark-success-text: #a7f3d0;
+--dark-warning-bg: #78350f;
+--dark-warning-text: #fcd34d;
+--dark-error-bg: #7f1d1d;
+--dark-error-text: #fecaca;
+--dark-info-bg: #1e3a8a;
+--dark-info-text: #bfdbfe;
+
+/* Interactive Colors */
+--dark-upvote: #34d399;
+--dark-upvote-bg: #064e3b;
+--dark-downvote: #f87171;
+--dark-downvote-bg: #7f1d1d;
 ```
 
 ## 2. Typography
@@ -69,8 +110,6 @@
 
 ## 3. Spacing System
 
-### Base Spacing Units
-
 ```css
 --space-1: 0.25rem; /* 4px */
 --space-2: 0.5rem; /* 8px */
@@ -79,13 +118,6 @@
 --space-6: 1.5rem; /* 24px */
 --space-8: 2rem; /* 32px */
 ```
-
-### Common Component Spacing
-
-- Card Padding: `p-6` (1.5rem)
-- Section Padding: `py-12` (3rem vertical)
-- Grid Gap: `gap-8` (2rem)
-- Stack Space: `space-y-4` (1rem)
 
 ## 4. Border Radius
 
@@ -96,50 +128,55 @@
 --radius-full: 9999px;
 ```
 
-## 5. Component Styles
+## 5. Component Base Styles
 
 ### Buttons
 
-#### Primary Button
-
 ```css
+.btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-md);
+  transition: var(--duration-200);
+}
+
 .btn-primary {
-  @apply px-4 py-2 text-sm font-medium text-white 
-  bg-accent-primary hover:bg-accent-secondary 
-  rounded-md transition-colors duration-200
-  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-primary;
+  color: white;
+  background-color: var(--accent-primary);
 }
-```
 
-#### Secondary Button
+.btn-primary:hover {
+  background-color: var(--accent-secondary);
+}
 
-```css
 .btn-secondary {
-  @apply px-4 py-2 text-sm font-medium text-primary 
-  bg-base-secondary hover:bg-hover-bg 
-  rounded-md transition-colors duration-200;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+}
+
+.btn-secondary:hover {
+  background-color: var(--hover-bg);
 }
 ```
 
-### Form Elements
-
-#### Input Fields
+### Input Fields
 
 ```css
-.input-field {
-  @apply w-full px-3 py-2 bg-base 
-  border border-border rounded-md 
-  text-primary placeholder-text-secondary 
-  focus:outline-none focus:ring-2 focus:ring-accent-primary 
-  focus:border-transparent transition-colors duration-200;
+.input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  transition: var(--duration-200);
 }
-```
 
-#### Text Areas
-
-```css
-.textarea-field {
-  @apply input-field resize-none;
+.input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px var(--accent-primary);
 }
 ```
 
@@ -147,139 +184,146 @@
 
 ```css
 .card {
-  @apply bg-base border border-border rounded-lg 
-  p-6 hover:border-border-hover transition-colors duration-200;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.card:hover {
+  border-color: var(--accent-primary);
 }
 ```
 
-## 6. Layout System
+## 6. Status Indicators
 
-### Grid System
-
-- Uses CSS Grid with responsive columns
-- Common patterns:
+### Success State
 
 ```css
-/* Two Columns */
-grid-cols-1 md:grid-cols-2
-
-/* Three Columns */
-grid-cols-1 md:grid-cols-3
-
-/* Sidebar Layout */
-grid-cols-1 lg:grid-cols-12
+.status-success {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+}
 ```
 
-### Container Widths
+### Warning State
+
+```css
+.status-warning {
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+}
+```
+
+### Error State
+
+```css
+.status-error {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+}
+```
+
+### Info State
+
+```css
+.status-info {
+  background-color: var(--info-bg);
+  color: var(--info-text);
+}
+```
+
+## 7. Interactive Elements
+
+### Voting System
+
+```css
+.upvote {
+  color: var(--upvote);
+  background-color: var(--upvote-bg);
+}
+
+.downvote {
+  color: var(--downvote);
+  background-color: var(--downvote-bg);
+}
+```
+
+## 8. Layout & Container
 
 ```css
 .container {
-  max-width: 1280px; /* 7xl in Tailwind */
-  @apply mx-auto px-4 sm:px-6 lg:px-8;
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4);
+  padding-right: var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: var(--space-6);
+    padding-right: var(--space-6);
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: var(--space-8);
+    padding-right: var(--space-8);
+  }
 }
 ```
 
-## 7. Animation & Transitions
+## 9. Utility Classes
 
-### Duration
-
-```css
---duration-200: 200ms; /* Default transition duration */
-```
-
-### Common Transitions
+### Transitions
 
 ```css
 .transition-base {
-  @apply transition-colors duration-200;
+  transition-property: color, background-color, border-color;
+  transition-duration: var(--duration-200);
 }
 ```
-
-## 8. Interactive States
-
-### Hover States
-
-- Buttons: Darker/lighter variant of base color
-- Cards: Subtle border color change
-- Links: Color change with no underline
 
 ### Focus States
 
 ```css
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 
-  focus:ring-offset-2 focus:ring-accent-primary;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--accent-primary);
 }
 ```
 
-### Disabled States
+### Text Colors
 
 ```css
-.disabled {
-  @apply opacity-50 cursor-not-allowed;
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-accent {
+  color: var(--accent-primary);
 }
 ```
 
-## 9. Responsive Design
-
-### Breakpoints
+### Background Colors
 
 ```css
-sm: 640px   /* Small devices */
-md: 768px   /* Medium devices */
-lg: 1024px  /* Large devices */
-xl: 1280px  /* Extra large devices */
-2xl: 1536px /* 2X Extra large devices */
-```
+.bg-base {
+  background-color: var(--bg-primary);
+}
 
-### Mobile-First Approach
+.bg-base-secondary {
+  background-color: var(--bg-secondary);
+}
 
-- All styles are written for mobile first
-- Use responsive modifiers for larger screens
-- Example: `text-sm md:text-base lg:text-lg`
-
-## 10. Dark Mode Support
-
-### Implementation
-
-- Uses CSS variables for color switching
-- Controlled by `data-theme="dark"` attribute
-- Automatic system preference detection
-- Manual toggle support
-
-### Color Mapping
-
-```css
-[data-theme="dark"] {
-  --bg-primary: var(--dark-bg-primary);
-  --bg-secondary: var(--dark-bg-secondary);
-  --text-primary: var(--dark-text-primary);
-  --text-secondary: var(--dark-text-secondary);
-  --border: var(--dark-border);
+.bg-base-tertiary {
+  background-color: var(--bg-tertiary);
 }
 ```
-
-## 11. Accessibility
-
-### Color Contrast
-
-- All color combinations meet WCAG 2.1 AA standards
-- Text colors maintain 4.5:1 contrast ratio
-- Interactive elements maintain 3:1 contrast ratio
-
-### Focus Indicators
-
-- Visible focus rings on all interactive elements
-- High contrast focus states
-- Keyboard navigation support
-
-## 12. Icons
-
-### Icon System
-
-- Uses SVG icons inline
-- Consistent sizing: `w-5 h-5` (1.25rem)
-- Color inheritance from text color
-- Supports both stroke and fill variants
-
-This design system ensures consistency across the application while maintaining flexibility for different contexts and requirements. It's built with accessibility, responsiveness, and maintainability in mind.

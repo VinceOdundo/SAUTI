@@ -47,7 +47,7 @@ const UserDashboard = () => {
           <p className="text-secondary text-sm">{title}</p>
           <p className="text-2xl font-semibold text-primary mt-1">{value}</p>
         </div>
-        <div className="w-12 h-12 rounded-full bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent-primary">
+        <div className="w-12 h-12 rounded-full bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent -primary">
           {icon}
         </div>
       </div>
@@ -129,7 +129,7 @@ const UserDashboard = () => {
         </div>
         <Link
           to={`/posts/${activity.postId}`}
-          className="text-accent-primary hover:text-accent-secondary transition-base"
+          className="text-accent hover:text-accent -secondary transition-base"
         >
           View
         </Link>

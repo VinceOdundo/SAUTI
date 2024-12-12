@@ -104,7 +104,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
               onClick={() => handleCategoryChange(category)}
               className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                 filters.category === category
-                  ? "bg-info-bg text-accent-primary"
+                  ? "bg-info-bg text-accent -primary"
                   : "text-secondary hover:bg-hover-bg"
               }`}
             >
@@ -127,7 +127,7 @@ const ForumFilters = ({ filters, onFilterChange }) => {
               onClick={() => handleVisibilityChange(option.value)}
               className={`w-full flex items-center px-3 py-2 rounded-md text-sm ${
                 filters.visibility === option.value
-                  ? "bg-info-bg text-accent-primary"
+                  ? "bg-info-bg text-accent -primary"
                   : "text-secondary hover:bg-hover-bg"
               }`}
             >
@@ -148,12 +148,12 @@ const ForumFilters = ({ filters, onFilterChange }) => {
           {filters.tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-bg text-accent-primary"
+              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-info-bg text-accent -primary"
             >
               {tag}
               <button
                 onClick={() => handleTagRemove(tag)}
-                className="ml-2 text-accent-secondary hover:text-accent-primary"
+                className="ml-2 text-accent -secondary hover:text-accent -primary"
               >
                 ×
               </button>

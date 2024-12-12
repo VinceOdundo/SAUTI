@@ -175,7 +175,7 @@ const Timeline = () => {
                 <div>
                   <Link
                     to={`/profile/${post.author.id}`}
-                    className="font-medium text-primary hover:text-accent-primary transition-base"
+                    className="font-medium text-primary hover:text-accent transition-base"
                   >
                     {post.author.username}
                   </Link>
@@ -205,7 +205,7 @@ const Timeline = () => {
                   onClick={() => handleLike(post.id)}
                   className={`flex items-center space-x-2 text-sm transition-base ${
                     post.isLiked
-                      ? "text-accent-primary"
+                      ? "text-accent -primary"
                       : "text-secondary hover:text-primary"
                   }`}
                 >
@@ -283,7 +283,7 @@ const Timeline = () => {
                       <div className="flex-1 bg-base-secondary rounded-lg p-3">
                         <Link
                           to={`/profile/${comment.author.id}`}
-                          className="font-medium text-primary hover:text-accent-primary transition-base"
+                          className="font-medium text-primary hover:text-accent transition-base"
                         >
                           {comment.author.username}
                         </Link>
@@ -294,7 +294,7 @@ const Timeline = () => {
                   {post.comments.length > 2 && (
                     <Link
                       to={`/posts/${post.id}`}
-                      className="block text-sm text-secondary hover:text-accent-primary transition-base"
+                      className="block text-sm text-secondary hover:text-accent transition-base"
                     >
                       View all {post.comments.length} comments
                     </Link>

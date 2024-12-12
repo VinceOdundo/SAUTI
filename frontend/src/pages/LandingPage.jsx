@@ -127,25 +127,25 @@ const LandingPage = () => {
         {!isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="card p-6 text-center">
-              <div className="text-3xl font-bold text-accent-primary mb-2">
+              <div className="text-3xl font-bold text-accent mb-2">
                 {stats.users.toLocaleString()}
               </div>
               <div className="text-secondary">Active Users</div>
             </div>
             <div className="card p-6 text-center">
-              <div className="text-3xl font-bold text-accent-primary mb-2">
+              <div className="text-3xl font-bold text-accent mb-2">
                 {stats.posts.toLocaleString()}
               </div>
               <div className="text-secondary">Community Posts</div>
             </div>
             <div className="card p-6 text-center">
-              <div className="text-3xl font-bold text-accent-primary mb-2">
+              <div className="text-3xl font-bold text-accent mb-2">
                 {stats.communities.toLocaleString()}
               </div>
               <div className="text-secondary">Local Communities</div>
             </div>
             <div className="card p-6 text-center">
-              <div className="text-3xl font-bold text-accent-primary mb-2">
+              <div className="text-3xl font-bold text-accent mb-2">
                 {stats.engagementRate}%
               </div>
               <div className="text-secondary">Engagement Rate</div>
@@ -168,7 +168,7 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div key={index} className="card p-6 space-y-4">
-                <div className="w-12 h-12 rounded-lg bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent-primary">
+                <div className="w-12 h-12 rounded-lg bg-accent-primary bg-opacity-10 flex items-center justify-center text-accent -primary">
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold text-primary">

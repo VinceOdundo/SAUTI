@@ -74,7 +74,7 @@ const LoginPage = () => {
                   </label>
                   <Link
                     to="/forgot-password"
-                    className="text-sm text-accent-primary hover:text-accent-secondary transition-base"
+                    className="text-sm text-accent hover:text-accent -secondary transition-base"
                   >
                     Forgot password?
                   </Link>
@@ -161,7 +161,7 @@ const LoginPage = () => {
                 Don't have an account?{" "}
                 <Link
                   to="/register"
-                  className="text-accent-primary hover:text-accent-secondary transition-base"
+                  className="text-accent hover:text-accent -secondary transition-base"
                 >
                   Sign up
                 </Link>

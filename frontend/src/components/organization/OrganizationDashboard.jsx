@@ -176,7 +176,7 @@ const OrganizationDashboard = () => {
               <div>
                 <label
                   htmlFor="title"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-primary"
                 >
                   Title
                 </label>
@@ -191,11 +191,11 @@ const OrganizationDashboard = () => {
                     }))
                   }
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                  className="input mt-1"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-primary mb-2">
                   Permissions
                 </label>
                 <div className="space-y-2">
@@ -211,11 +211,11 @@ const OrganizationDashboard = () => {
                         id={permission}
                         checked={newRepData.permissions.includes(permission)}
                         onChange={() => handlePermissionChange(permission)}
-                        className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-accent-primary focus:ring-accent-primary border-border rounded"
                       />
                       <label
                         htmlFor={permission}
-                        className="ml-2 block text-sm text-gray-700"
+                        className="ml-2 block text-sm text-secondary"
                       >
                         {permission.split("_").join(" ").toUpperCase()}
                       </label>
