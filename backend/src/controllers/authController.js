@@ -1,5 +1,5 @@
 const User = require("../models/User");
-const { createToken } = require("../utils/tokenUtils");
+const { createToken, createRefreshToken, verifyRefreshToken } = require("../utils/tokenUtils");
 const { validationResult } = require("express-validator");
 const {
   generateVerificationToken,
@@ -10,40 +10,333 @@ const {
 const { validatePassword } = require("../utils/passwordUtils");
 const { rateLimit } = require("express-rate-limit");
 const crypto = require("crypto");
+const multer = require('multer');
+const path = require('path');
+const bcrypt = require('bcryptjs');
 
-exports.register = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ message: errors.array()[0].msg });
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/avatars/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
   }
+});
 
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: function (req, file, cb) {
+    if (!file) return cb(null, true);
+    const allowedTypes = /jpeg|jpg|png/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
+  }
+}).single('avatar');
+
+// Login rate limiter
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per IP
+  message: 'Too many login attempts. Please try again after 15 minutes.'
+});
+
+// Login controller
+exports.login = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { email, password } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already in use" });
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
     }
 
-    // Create user with basic info first
-    const user = await User.create({
-      name,
-      email,
-      password,
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials"
+      });
+    }
+
+    // Check if user is active
+    if (user.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message: "Account is not active. Please contact support."
+      });
+    }
+
+    // Generate tokens
+    const accessToken = createToken(
+      {
+        userId: user._id,
+        role: user.role,
+        email: user.email,
+        sessionVersion: user.sessionVersion
+      },
+      "15m" // Access token expires in 15 minutes
+    );
+
+    const refreshToken = createRefreshToken(
+      {
+        userId: user._id,
+        sessionVersion: user.sessionVersion
+      },
+      "7d" // Refresh token expires in 7 days
+    );
+
+    // Set cookies
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000 // 15 minutes
     });
 
-    const token = createToken({ userId: user._id });
-    res.status(201).json({
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    // Update last active
+    user.lastActive = new Date();
+    await user.save();
+
+    // Send response
+    res.json({
+      success: true,
+      accessToken,
       user: {
+        id: user._id,
         name: user.name,
         email: user.email,
-        isProfileComplete: false,
-      },
-      token,
+        role: user.role,
+        emailVerified: user.emailVerified,
+        verificationStatus: user.verificationStatus,
+        profile: user.profile,
+        lastActive: user.lastActive
+      }
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during login"
+    });
+  }
+};
+
+// Refresh token controller
+exports.refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh token not found"
+      });
+    }
+
+    const decoded = verifyRefreshToken(refreshToken);
+    const user = await User.findById(decoded.userId);
+
+    if (!user || user.sessionVersion !== decoded.sessionVersion) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid refresh token"
+      });
+    }
+
+    // Generate new access token
+    const accessToken = createToken(
+      {
+        userId: user._id,
+        role: user.role,
+        email: user.email,
+        sessionVersion: user.sessionVersion
+      },
+      "15m"
+    );
+
+    // Set new access token cookie
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 15 * 60 * 1000 // 15 minutes
+    });
+
+    res.json({
+      success: true,
+      accessToken
+    });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    res.status(401).json({
+      success: false,
+      message: "Invalid refresh token"
+    });
+  }
+};
+
+// Logout controller
+exports.logout = async (req, res) => {
+  try {
+    const user = req.user;
+    
+    // Invalidate current session
+    user.sessionVersion = (user.sessionVersion || 0) + 1;
+    await user.save();
+
+    // Clear cookies
+    res.clearCookie("accessToken");
+    res.clearCookie("refreshToken");
+
+    res.json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during logout"
+    });
+  }
+};
+
+// Register controller
+exports.register = async (req, res) => {
+  try {
+    upload(req, res, async function(err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({ message: 'File upload error: ' + err.message });
+      } else if (err) {
+        return res.status(400).json({ message: err.message });
+      }
+
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          errors: errors.array()
+        });
+      }
+
+      const { name, email, password, role = "citizen" } = req.body;
+
+      // Check if user exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already registered"
+        });
+      }
+
+      // Create verification token
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(verificationToken)
+        .digest("hex");
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Create user
+      const userData = {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        verificationToken: hashedToken,
+        verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+        status: "active"
+      };
+
+      // Add avatar if uploaded
+      if (req.file) {
+        userData.profile = {
+          avatar: `/uploads/avatars/${req.file.filename}`
+        };
+      }
+
+      const user = await User.create(userData);
+
+      // Generate tokens
+      const accessToken = createToken(
+        {
+          userId: user._id,
+          role: user.role,
+          email: user.email,
+          sessionVersion: user.sessionVersion
+        },
+        "15m"
+      );
+
+      const refreshToken = createRefreshToken(
+        {
+          userId: user._id,
+          sessionVersion: user.sessionVersion
+        },
+        "7d"
+      );
+
+      // Set cookies
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000 // 15 minutes
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
+      // Send verification email
+      await sendVerificationEmail(user.email, verificationToken);
+      await sendWelcomeEmail(user.email, user.name);
+
+      res.status(201).json({
+        success: true,
+        accessToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          emailVerified: user.emailVerified,
+          verificationStatus: user.verificationStatus,
+          profile: user.profile
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during registration"
+    });
   }
 };
 
@@ -86,11 +379,17 @@ exports.resendVerification = async (req, res) => {
       return res.status(400).json({ message: "Email already verified" });
     }
 
-    const verificationToken = generateVerificationToken();
-    user.verificationToken = verificationToken;
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
+    user.verificationToken = hashedToken;
+    user.verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
     await user.save();
 
-    const emailSent = await sendVerificationEmail(user, verificationToken);
+    const emailSent = await sendVerificationEmail(user.email, verificationToken);
     if (!emailSent) {
       return res.status(500).json({
         message: "Error sending verification email",
@@ -105,61 +404,6 @@ exports.resendVerification = async (req, res) => {
     });
   }
 };
-
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    console.log("JWT_SECRET during login:", process.env.JWT_SECRET);
-
-    const token = createToken(
-      {
-        userId: user._id,
-        role: user.role,
-      },
-      "30d"
-    );
-
-    console.log("Created token:", token);
-
-    res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-    });
-
-    res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isVerified: user.isVerified,
-      },
-      token,
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(400).json({ message: error.message });
-  }
-};
-
-exports.getCurrentUser = async (req, res) => {
-  res.json({ user: req.user });
-};
-
-// Rate limiter for password reset attempts
-exports.passwordResetLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 attempts per IP
-  message: { message: "Too many reset attempts. Please try again in an hour." },
-});
 
 exports.forgotPassword = async (req, res) => {
   try {
@@ -222,7 +466,9 @@ exports.resetPassword = async (req, res) => {
     }
 
     // Update password and clear reset token
-    user.password = password;
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    user.password = hashedPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
 
@@ -242,4 +488,8 @@ exports.resetPassword = async (req, res) => {
     console.error("Password reset error:", error);
     res.status(500).json({ message: "Error resetting password" });
   }
+};
+
+exports.getCurrentUser = async (req, res) => {
+  res.json({ user: req.user });
 };

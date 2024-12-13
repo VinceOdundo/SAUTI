@@ -25,7 +25,7 @@ const CommunicationPanel = () => {
 
   const fetchMessages = async () => {
     try {
-      const response = await axios.get("/api/communication/messages");
+      const response = await axios.get("/communication/messages");
       setMessages(response.data.messages);
       setLoading(false);
     } catch (error) {
@@ -37,7 +37,7 @@ const CommunicationPanel = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/communication/messages", newMessage);
+      await axios.post("/communication/messages", newMessage);
       setNewMessage({
         title: "",
         content: "",

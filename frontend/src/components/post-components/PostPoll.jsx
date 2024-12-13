@@ -12,7 +12,7 @@ const PostPoll = ({ poll, postId, onUpdate }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `/api/forum/posts/${postId}/vote-poll`,
+        `/forum/posts/${postId}/vote-poll`,
         {
           optionIndex,
         }

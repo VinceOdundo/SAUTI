@@ -31,7 +31,7 @@ const NotificationPreferences = () => {
 
   const fetchPreferences = async () => {
     try {
-      const response = await axios.get("/api/notifications/preferences");
+      const response = await axios.get("/notifications/preferences");
       setPreferences(response.data);
     } catch (error) {
       showToast(
@@ -56,7 +56,7 @@ const NotificationPreferences = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await axios.post("/api/notifications/preferences", preferences);
+      await axios.post("/notifications/preferences", preferences);
       showToast("Preferences saved successfully", "success");
     } catch (error) {
       showToast(

@@ -11,7 +11,7 @@ const EmailVerificationPage = () => {
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        await axios.post(`/api/auth/verify-email/${token}`);
+        await axios.post(`/auth/verify-email/${token}`);
         setStatus("success");
         setTimeout(() => {
           navigate("/");

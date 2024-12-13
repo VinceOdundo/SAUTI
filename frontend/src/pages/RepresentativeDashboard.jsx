@@ -24,7 +24,7 @@ const RepresentativeDashboard = () => {
     try {
       setLoading(true);
       const [feedbackResponse, statsResponse] = await Promise.all([
-        axios.get("/api/feedback", {
+        axios.get("/feedback", {
           params: { representativeId: user._id },
           signal: controller.signal,
           headers: {
@@ -32,7 +32,7 @@ const RepresentativeDashboard = () => {
             Pragma: "no-cache",
           },
         }),
-        axios.get(`/api/representatives/${user._id}/stats`, {
+        axios.get(`/representatives/${user._id}/stats`, {
           signal: controller.signal,
         }),
       ]);
@@ -58,7 +58,7 @@ const RepresentativeDashboard = () => {
   const handleRespond = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`/api/feedback/${selectedFeedback._id}/respond`, {
+      await axios.post(`/feedback/${selectedFeedback._id}/respond`, {
         response,
         status: "resolved",
       });

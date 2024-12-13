@@ -14,11 +14,12 @@ const AppLayout = ({ children }) => {
           <div className="flex items-center justify-between h-full">
             {/* Logo and Primary Navigation */}
             <div className="flex items-center space-x-8">
-              <Link
-                to="/"
-                className="text-xl font-semibold text-primary hover:text-accent transition-base"
-              >
-                SAUTI
+              
+                 <Link to="/" >
+   <img             className="h-12 w-auto"
+                      src="/assets/logo.svg"
+                      alt="Sauti"
+                    />
               </Link>
 
               {user && (

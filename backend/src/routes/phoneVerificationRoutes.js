@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const {
   sendPhoneVerification,
   verifyPhone,
 } = require("../controllers/phoneVerificationController");
 
-router.use(authenticateUser);
+router.use(protect);
 
 router.post("/send", sendPhoneVerification);
 router.post("/verify", verifyPhone);

@@ -4,17 +4,48 @@ import Cookies from "js-cookie";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
+// Axios instance with interceptors
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true
+});
+
+// Add token to requests
+api.interceptors.request.use(
+  (config) => {
+    const token = Cookies.get("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle token expiration
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401 && error.response?.data?.message === "Token expired") {
+      Cookies.remove("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Async thunks
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, {
+      const response = await api.post("/auth/login", {
         email,
         password,
       });
       const { token, user } = response.data;
-      Cookies.set("token", token, { expires: 7 });
       return { user, token };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
@@ -26,9 +57,8 @@ export const register = createAsyncThunk(
   "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/register`, userData);
+      const response = await api.post("/auth/register", userData);
       const { token, user } = response.data;
-      Cookies.set("token", token, { expires: 7 });
       return { user, token };
     } catch (error) {
       return rejectWithValue(
@@ -38,27 +68,40 @@ export const register = createAsyncThunk(
   }
 );
 
-export const logout = createAsyncThunk("auth/logout", async () => {
-  Cookies.remove("token");
-  return null;
-});
+export const logout = createAsyncThunk(
+  "auth/logout", 
+  async (_, { rejectWithValue }) => {
+    try {
+      await api.post("/auth/logout");
+      Cookies.remove("token");
+      return null;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Logout failed");
+    }
+  }
+);
 
 export const verifyToken = createAsyncThunk(
   "auth/verifyToken",
   async (_, { rejectWithValue }) => {
     try {
-      const token = Cookies.get("token");
-      if (!token) throw new Error("No token found");
-
-      const response = await axios.get(`${API_URL}/auth/verify`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      return { user: response.data.user, token };
+      const response = await api.get("/auth/me");
+      return response.data.user;
     } catch (error) {
       Cookies.remove("token");
-      return rejectWithValue(
-        error.response?.data?.message || "Token verification failed"
-      );
+      return rejectWithValue(error.response?.data?.message || "Token verification failed");
+    }
+  }
+);
+
+export const updateProfile = createAsyncThunk(
+  "auth/updateProfile",
+  async (profileData, { rejectWithValue }) => {
+    try {
+      const response = await api.put("/auth/profile", profileData);
+      return response.data.user;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Profile update failed");
     }
   }
 );
@@ -67,7 +110,7 @@ const initialState = {
   user: null,
   token: Cookies.get("token") || null,
   isAuthenticated: false,
-  loading: false,
+  loading: true,
   error: null,
 };
 
@@ -83,8 +126,8 @@ const authSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
+    // Login
     builder
-      // Login
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -94,12 +137,15 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.error = null;
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
-      // Register
+      });
+
+    // Register
+    builder
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -109,34 +155,64 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload.user;
         state.token = action.payload.token;
+        state.error = null;
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      });
+
+    // Logout
+    builder
+      .addCase(logout.pending, (state) => {
+        state.loading = true;
       })
-      // Logout
       .addCase(logout.fulfilled, (state) => {
+        state.loading = false;
+        state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        state.isAuthenticated = false;
-        state.loading = false;
         state.error = null;
       })
-      // Verify Token
+      .addCase(logout.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // Verify Token
+    builder
       .addCase(verifyToken.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(verifyToken.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.user = action.payload;
+        state.error = null;
       })
-      .addCase(verifyToken.rejected, (state) => {
+      .addCase(verifyToken.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
+        state.error = action.payload;
+      });
+
+    // Update Profile
+    builder
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

@@ -1,7 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+import api from "../../config/api";
 
 // Async thunks
 export const fetchPosts = createAsyncThunk(
@@ -14,7 +12,7 @@ export const fetchPosts = createAsyncThunk(
         ...(category && { category }),
       });
 
-      const response = await axios.get(`${API_URL}/forum/posts?${params}`);
+      const response = await api.get(`/forum/posts?${params}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -28,7 +26,7 @@ export const fetchPostById = createAsyncThunk(
   "forum/fetchPostById",
   async (postId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/forum/posts/${postId}`);
+      const response = await api.get(`/forum/posts/${postId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -42,7 +40,15 @@ export const createPost = createAsyncThunk(
   "forum/createPost",
   async (postData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/forum/posts`, postData);
+      const config = {
+        headers:
+          postData instanceof FormData
+            ? {
+                "Content-Type": "multipart/form-data",
+              }
+            : undefined,
+      };
+      const response = await api.post("/forum/posts", postData, config);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -56,9 +62,18 @@ export const updatePost = createAsyncThunk(
   "forum/updatePost",
   async ({ postId, postData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        `${API_URL}/forum/posts/${postId}`,
-        postData
+      const config = {
+        headers:
+          postData instanceof FormData
+            ? {
+                "Content-Type": "multipart/form-data",
+              }
+            : undefined,
+      };
+      const response = await api.put(
+        `/forum/posts/${postId}`,
+        postData,
+        config
       );
       return response.data;
     } catch (error) {
@@ -73,7 +88,7 @@ export const deletePost = createAsyncThunk(
   "forum/deletePost",
   async (postId, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API_URL}/forum/posts/${postId}`);
+      await api.delete(`/forum/posts/${postId}`);
       return postId;
     } catch (error) {
       return rejectWithValue(
@@ -83,35 +98,13 @@ export const deletePost = createAsyncThunk(
   }
 );
 
-export const createComment = createAsyncThunk(
-  "forum/createComment",
-  async ({ postId, content }, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/forum/posts/${postId}/comments`,
-        {
-          content,
-        }
-      );
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to create comment"
-      );
-    }
-  }
-);
-
-export const voteOnPost = createAsyncThunk(
-  "forum/voteOnPost",
+export const votePost = createAsyncThunk(
+  "forum/votePost",
   async ({ postId, voteType }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        `${API_URL}/forum/posts/${postId}/vote`,
-        {
-          voteType,
-        }
-      );
+      const response = await api.post(`/forum/posts/${postId}/vote`, {
+        type: voteType,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -121,34 +114,56 @@ export const voteOnPost = createAsyncThunk(
   }
 );
 
-const initialState = {
-  posts: [],
-  currentPost: null,
-  totalPosts: 0,
-  currentPage: 1,
-  loading: false,
-  error: null,
-  categories: [
-    "General",
-    "Policy",
-    "Infrastructure",
-    "Education",
-    "Healthcare",
-    "Environment",
-    "Economy",
-    "Security",
-  ],
-};
+export const commentOnPost = createAsyncThunk(
+  "forum/commentOnPost",
+  async ({ postId, content }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/forum/posts/${postId}/comments`, {
+        content,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to comment on post"
+      );
+    }
+  }
+);
 
+export const repostPost = createAsyncThunk(
+  "forum/repostPost",
+  async ({ postId, content }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/forum/posts/${postId}/reshare`, {
+        content,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to reshare post"
+      );
+    }
+  }
+);
+
+// Slice definition
 const forumSlice = createSlice({
   name: "forum",
-  initialState,
+  initialState: {
+    posts: [],
+    currentPost: null,
+    loading: false,
+    error: null,
+    pagination: {
+      page: 1,
+      limit: 10,
+      total: 0,
+      pages: 0,
+    },
+  },
   reducers: {
     clearError: (state) => {
       state.error = null;
-    },
-    setCurrentPage: (state, action) => {
-      state.currentPage = action.payload;
     },
     clearCurrentPost: (state) => {
       state.currentPost = null;
@@ -156,7 +171,7 @@ const forumSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch Posts
+      // Fetch posts
       .addCase(fetchPosts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -164,72 +179,62 @@ const forumSlice = createSlice({
       .addCase(fetchPosts.fulfilled, (state, action) => {
         state.loading = false;
         state.posts = action.payload.posts;
-        state.totalPosts = action.payload.total;
+        state.pagination = action.payload.pagination;
       })
       .addCase(fetchPosts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-      // Fetch Single Post
-      .addCase(fetchPostById.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchPostById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.currentPost = action.payload;
-      })
-      .addCase(fetchPostById.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // Create Post
+      // Create post
       .addCase(createPost.fulfilled, (state, action) => {
-        state.posts.unshift(action.payload);
-        state.totalPosts += 1;
+        state.posts.unshift(action.payload.post);
       })
-      // Update Post
+      // Update post
       .addCase(updatePost.fulfilled, (state, action) => {
         const index = state.posts.findIndex(
-          (post) => post.id === action.payload.id
+          (post) => post._id === action.payload.post._id
         );
         if (index !== -1) {
-          state.posts[index] = action.payload;
+          state.posts[index] = action.payload.post;
         }
-        if (state.currentPost?.id === action.payload.id) {
-          state.currentPost = action.payload;
+        if (state.currentPost?._id === action.payload.post._id) {
+          state.currentPost = action.payload.post;
         }
       })
-      // Delete Post
+      // Delete post
       .addCase(deletePost.fulfilled, (state, action) => {
-        state.posts = state.posts.filter((post) => post.id !== action.payload);
-        state.totalPosts -= 1;
-        if (state.currentPost?.id === action.payload) {
+        state.posts = state.posts.filter((post) => post._id !== action.payload);
+        if (state.currentPost?._id === action.payload) {
           state.currentPost = null;
         }
       })
-      // Create Comment
-      .addCase(createComment.fulfilled, (state, action) => {
-        if (state.currentPost) {
-          state.currentPost.comments.push(action.payload);
+      // Vote post
+      .addCase(votePost.fulfilled, (state, action) => {
+        const index = state.posts.findIndex(
+          (post) => post._id === action.payload.post._id
+        );
+        if (index !== -1) {
+          state.posts[index] = action.payload.post;
+        }
+        if (state.currentPost?._id === action.payload.post._id) {
+          state.currentPost = action.payload.post;
         }
       })
-      // Vote on Post
-      .addCase(voteOnPost.fulfilled, (state, action) => {
-        const { postId, votes, userVote } = action.payload;
-        const post = state.posts.find((p) => p.id === postId);
-        if (post) {
-          post.votes = votes;
-          post.userVote = userVote;
+      // Comment on post
+      .addCase(commentOnPost.fulfilled, (state, action) => {
+        const index = state.posts.findIndex(
+          (post) => post._id === action.payload.post._id
+        );
+        if (index !== -1) {
+          state.posts[index] = action.payload.post;
         }
-        if (state.currentPost?.id === postId) {
-          state.currentPost.votes = votes;
-          state.currentPost.userVote = userVote;
+        if (state.currentPost?._id === action.payload.post._id) {
+          state.currentPost = action.payload.post;
         }
       });
   },
 });
 
-export const { clearError, setCurrentPage, clearCurrentPost } =
-  forumSlice.actions;
+export const { clearError, clearCurrentPost } = forumSlice.actions;
+
 export default forumSlice.reducer;

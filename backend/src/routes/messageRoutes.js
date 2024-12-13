@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const { upload, handleUploadError } = require("../middleware/uploadMiddleware");
 const {
   sendMessage,
@@ -12,7 +12,7 @@ const {
 } = require("../controllers/messageController");
 
 // All routes require authentication
-router.use(authenticateUser);
+router.use(protect);
 
 // Configure multer for file uploads
 const uploadFields = upload.fields([

@@ -24,7 +24,7 @@ const ResetPasswordPage = () => {
 
     setIsLoading(true);
     try {
-      await axios.post("/api/auth/reset-password", {
+      await axios.post("/auth/reset-password", {
         token,
         password: formData.password,
       });

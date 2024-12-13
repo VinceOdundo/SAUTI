@@ -19,7 +19,7 @@ const Timeline = () => {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`/api/posts?filter=${filter}`);
+      const response = await axios.get(`/posts?filter=${filter}`);
       setPosts(response.data);
     } catch (error) {
       showToast(
@@ -33,7 +33,7 @@ const Timeline = () => {
 
   const handleLike = async (postId) => {
     try {
-      const response = await axios.post(`/api/posts/${postId}/like`);
+      const response = await axios.post(`/posts/${postId}/like`);
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postId ? { ...post, ...response.data } : post
@@ -49,7 +49,7 @@ const Timeline = () => {
 
   const handleComment = async (postId, content) => {
     try {
-      const response = await axios.post(`/api/posts/${postId}/comments`, {
+      const response = await axios.post(`/posts/${postId}/comments`, {
         content,
       });
       setPosts((prevPosts) =>

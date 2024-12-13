@@ -32,7 +32,7 @@ const LocationPicker = ({ location, onChange }) => {
 
   const fetchCounties = async () => {
     try {
-      const response = await axios.get("/api/locations/counties");
+      const response = await axios.get("/locations/counties");
       setCounties(response.data);
     } catch (error) {
       showToast(
@@ -47,7 +47,7 @@ const LocationPicker = ({ location, onChange }) => {
   const fetchConstituencies = async (county) => {
     try {
       const response = await axios.get(
-        `/api/locations/constituencies/${county}`
+        `/locations/constituencies/${county}`
       );
       setConstituencies(response.data);
     } catch (error) {
@@ -60,7 +60,7 @@ const LocationPicker = ({ location, onChange }) => {
 
   const fetchWards = async (constituency) => {
     try {
-      const response = await axios.get(`/api/locations/wards/${constituency}`);
+      const response = await axios.get(`/locations/wards/${constituency}`);
       setWards(response.data);
     } catch (error) {
       showToast(

@@ -73,10 +73,7 @@ const PostCard = ({ post }) => {
                 })}
               </span>
               {post.location && (
-                <>
-                  <span>•</span>
-                  <span>{`${post.location.ward}, ${post.location.constituency}`}</span>
-                </>
+                <></>
               )}
             </div>
           </div>
@@ -96,38 +93,61 @@ const PostCard = ({ post }) => {
         <p className="text-secondary">{post.content}</p>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center mt-4 pt-4 border-t border-border">
-        <button
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
-            post.userVote === "up"
-              ? "text-upvote bg-upvote-bg"
-              : "text-secondary hover:bg-hover-bg"
-          }`}
-          onClick={() => handleVote("up")}
-        >
-          <ThumbUpIcon className="w-5 h-5" />
-          <span>{post.upvotes || 0}</span>
-        </button>
+      {/* Post Media */}
+      {post.media && (
+        <div className="mt-2">
+          <img
+            src={post.media}
+            alt="Post media"
+            className="w-full h-auto rounded-lg"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        </div>
+      )}
 
+      {/* Post Location */}
+      {post.location?.placeName && (
+        <div className="mt-2 text-sm text-gray-500">
+          📍 {post.location.placeName}
+        </div>
+      )}
+
+      {/* Post Category and Tags */}
+      <div className="mt-2 flex flex-wrap gap-2">
+        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+          {post.category}
+        </span>
+        {post.tags?.map((tag, index) => (
+          <span
+            key={index}
+            className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
+          >
+            #{tag}
+          </span>
+        ))}
+      </div>
+
+      {/* Post Stats */}
+      <div className="mt-4 flex items-center justify-between text-gray-500">
         <button
-          className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors duration-200 ${
-            post.userVote === "down"
-              ? "text-downvote bg-downvote-bg"
-              : "text-secondary hover:bg-hover-bg"
+          onClick={handleLike}
+          disabled={isLoading}
+          className={`flex items-center space-x-1 ${
+            isLiked ? "text-blue-500" : ""
           }`}
-          onClick={() => handleVote("down")}
         >
-          <ThumbDownIcon className="w-5 h-5" />
-          <span>{post.downvotes || 0}</span>
+          <ThumbUpIcon className="h-5 w-5" />
+          <span>{likeCount}</span>
         </button>
 
         <button
           className="flex items-center space-x-2 px-4 py-2 rounded-md text-secondary hover:bg-hover-bg transition-colors duration-200"
-          onClick={() => setShowComments(!showComments)}
+          onClick={() => handleShare()}
         >
           <ChatIcon className="w-5 h-5" />
-          <span>{post.commentCount || 0} Comments</span>
+          <span>Share</span>
         </button>
       </div>
     </div>

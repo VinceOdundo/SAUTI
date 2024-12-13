@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: "/forum",
   headers: {
     "Content-Type": "application/json",
   },
@@ -67,12 +67,14 @@ export const deletePost = async (postId) => {
 };
 
 export const likePost = async (postId) => {
-  const response = await api.post(`/posts/${postId}/like`);
+  const response = await api.post(`/posts/${postId}/vote`, { type: "upvote" });
   return response.data;
 };
 
 export const unlikePost = async (postId) => {
-  const response = await api.delete(`/posts/${postId}/like`);
+  const response = await api.post(`/posts/${postId}/vote`, {
+    type: "downvote",
+  });
   return response.data;
 };
 
@@ -103,14 +105,20 @@ export const deleteComment = async (postId, commentId) => {
 
 export const likeComment = async (postId, commentId) => {
   const response = await api.post(
-    `/posts/${postId}/comments/${commentId}/like`
+    `/posts/${postId}/comments/${commentId}/vote`,
+    {
+      type: "upvote",
+    }
   );
   return response.data;
 };
 
 export const unlikeComment = async (postId, commentId) => {
-  const response = await api.delete(
-    `/posts/${postId}/comments/${commentId}/like`
+  const response = await api.post(
+    `/posts/${postId}/comments/${commentId}/vote`,
+    {
+      type: "downvote",
+    }
   );
   return response.data;
 };

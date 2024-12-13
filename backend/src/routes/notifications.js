@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect } = require("../middleware/auth");
+const { authenticateUser } = require("../middleware/authMiddleware");
 const {
   getNotifications,
   markAsRead,
@@ -13,7 +13,7 @@ const {
 } = require("../controllers/notificationPreferenceController");
 
 // All routes are protected
-router.use(protect);
+router.use(authenticateUser);
 
 // Notification routes
 router.get("/", getNotifications);

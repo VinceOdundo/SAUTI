@@ -4,23 +4,30 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const path = require("path");
+const http = require("http");
+const timeout = require("connect-timeout");
+
+// Route imports
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
 const representativeRoutes = require("./routes/representativeRoutes");
 const forumRoutes = require("./routes/forumRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const communicationRoutes = require("./routes/communicationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const citizenRoutes = require("./routes/citizenRoutes");
 const locationRoutes = require("./routes/locationRoutes");
-const createDefaultAdmin = require("./utils/createDefaultAdmin");
 const phoneVerificationRoutes = require("./routes/phoneVerificationRoutes");
+const postRoutes = require("./routes/postRoutes");
+const statsRoutes = require("./routes/statsRoutes");
+
+// Middleware and utilities
+const createDefaultAdmin = require("./utils/createDefaultAdmin");
 const { limiter, speedLimiter } = require("./middleware/rateLimiter");
 const { createIndexes } = require("./config/mongoIndexes");
 const { initializeWebSocket } = require("./services/websocket");
 const { uploadDir } = require("./middleware/uploadMiddleware");
-const timeout = require("connect-timeout");
-const http = require("http");
 
 const app = express();
 
@@ -74,6 +81,12 @@ app.use(speedLimiter);
 
 // Request timeout
 app.use(timeout("15s"));
+
+// Define haltOnTimedout before using it
+function haltOnTimedout(req, res, next) {
+  if (!req.timedout) next();
+}
+
 app.use(haltOnTimedout);
 
 // Initialize WebSocket
@@ -83,25 +96,46 @@ const { wss, clients } = initializeWebSocket(server);
 // Initialize MongoDB indexes
 createIndexes(mongoose);
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/organizations", organizationRoutes);
-app.use("/api/representatives", representativeRoutes);
-app.use("/api/forum", forumRoutes);
-app.use("/api/messages", messageRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/citizen", citizenRoutes);
-app.use("/api/phone-verification", phoneVerificationRoutes);
-app.use("/api/locations", locationRoutes);
+// API Routes
+const apiRouter = express.Router();
+
+// Auth routes
+apiRouter.use("/auth", authRoutes);
+
+// User management routes
+apiRouter.use("/users", userRoutes);
+apiRouter.use("/admin", adminRoutes);
+apiRouter.use("/citizen", citizenRoutes);
+
+// Forum routes
+apiRouter.use("/forum", forumRoutes);
+
+// Organization and representative routes
+apiRouter.use("/organizations", organizationRoutes);
+apiRouter.use("/representatives", representativeRoutes);
+
+// Communication routes
+apiRouter.use("/messages", messageRoutes); // Direct messaging
+apiRouter.use("/communications", communicationRoutes); // Official communications
+
+// Content routes
+apiRouter.use("/locations", locationRoutes);
+
+// Utility routes
+apiRouter.use("/phone-verification", phoneVerificationRoutes);
+
+// Post routes
+apiRouter.use("/posts", postRoutes);
+
+// Stats routes
+apiRouter.use("/stats", statsRoutes);
+
+// Mount all API routes under /api
+app.use("/api", apiRouter);
 
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to Sauti API" });
 });
-
-function haltOnTimedout(req, res, next) {
-  if (!req.timedout) next();
-}
 
 // Add global error handler
 const errorHandler = (err, req, res, next) => {

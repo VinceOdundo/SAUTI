@@ -25,7 +25,7 @@ const RepresentativesPage = () => {
         const params = Object.fromEntries(
           Object.entries(filterParams).filter(([_, v]) => v)
         );
-        const response = await axios.get("/api/representatives", {
+        const response = await axios.get("/representatives", {
           params,
           headers: { "Cache-Control": "max-age=300" }, // 5 minute cache
         });

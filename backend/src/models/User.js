@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    verificationToken: String,
+    verificationTokenExpires: Date,
     verificationStatus: {
       type: String,
       enum: ["none", "pending", "approved", "rejected"],
@@ -52,6 +54,10 @@ const userSchema = new mongoose.Schema(
         facebook: String,
         linkedin: String,
       },
+    },
+    profileCompletion: {
+      type: Number,
+      default: 0,
     },
     settings: {
       notifications: {
@@ -102,7 +108,10 @@ userSchema.index({ verificationStatus: 1 });
 
 // Hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) {
+    this.profileCompletion = this.calculateProfileCompletion();
+    return next();
+  }
 
   try {
     const salt = await bcrypt.genSalt(10);
@@ -136,6 +145,36 @@ userSchema.methods.isVerified = function () {
   return this.emailVerified && this.verificationStatus === "approved";
 };
 
+// Calculate profile completion percentage
+userSchema.methods.calculateProfileCompletion = function () {
+  const requiredFields = ["name", "email", "phoneNumber"];
+  const optionalFields = ["bio", "avatar", "location"];
+  const representativeFields = ["county", "constituency", "ward", "partyAffiliation"];
+  
+  let totalFields = requiredFields.length + optionalFields.length;
+  let completedFields = 0;
+
+  // Check required fields
+  requiredFields.forEach(field => {
+    if (this[field]) completedFields++;
+  });
+
+  // Check optional fields
+  optionalFields.forEach(field => {
+    if (this[field]) completedFields++;
+  });
+
+  // Additional fields for representatives
+  if (this.role === "representative") {
+    totalFields += representativeFields.length;
+    representativeFields.forEach(field => {
+      if (this.profile.location[field]) completedFields++;
+    });
+  }
+
+  return Math.round((completedFields / totalFields) * 100);
+};
+
 // Clean response for client
 userSchema.methods.toClientJSON = function () {
   return {
@@ -146,6 +185,7 @@ userSchema.methods.toClientJSON = function () {
     emailVerified: this.emailVerified,
     verificationStatus: this.verificationStatus,
     profile: this.profile,
+    profileCompletion: this.profileCompletion,
     settings: {
       notifications: this.settings.notifications,
       privacy: this.settings.privacy,

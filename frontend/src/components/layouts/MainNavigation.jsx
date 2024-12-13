@@ -65,8 +65,11 @@ const MainNavigation = () => {
           {/* Logo and primary navigation */}
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link to="/" className="text-2xl font-bold text-primary-600">
-                Sauti
+              <Link to="/" >
+   <img             className="h-12 w-auto"
+                      src="/assets/logo.svg"
+                      alt="Sauti"
+                    />
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

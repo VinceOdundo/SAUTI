@@ -7,11 +7,26 @@ const commentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    post: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      required: true,
+    },
     content: {
       type: String,
       required: true,
       maxlength: 2000,
     },
+    parentComment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+    },
+    replies: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment"
+      }
+    ],
     votes: {
       upvotes: [
         {
@@ -48,7 +63,43 @@ const commentSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
+  }
 );
+
+// Virtual field for vote count
+commentSchema.virtual('voteCount').get(function() {
+  return this.votes.upvotes.length - this.votes.downvotes.length;
+});
+
+// Pre-remove middleware to clean up replies
+commentSchema.pre('remove', async function(next) {
+  try {
+    // Remove all replies
+    await this.model('Comment').deleteMany({ parentComment: this._id });
+    
+    // If this is a reply, remove it from parent's replies array
+    if (this.parentComment) {
+      const parentComment = await this.model('Comment').findById(this.parentComment);
+      if (parentComment) {
+        parentComment.replies.pull(this._id);
+        await parentComment.save();
+      }
+    }
+    
+    // Remove from post's comments array
+    const Post = mongoose.model('Post');
+    await Post.findByIdAndUpdate(this.post, {
+      $pull: { comments: this._id }
+    });
+    
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 module.exports = mongoose.model("Comment", commentSchema);

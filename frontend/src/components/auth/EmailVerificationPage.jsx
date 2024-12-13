@@ -28,7 +28,7 @@ const EmailVerificationPage = () => {
   const verifyEmail = async (verificationToken) => {
     setIsLoading(true);
     try {
-      await axios.post("/api/auth/verify-email", { token: verificationToken });
+      await axios.post("/auth/verify-email", { token: verificationToken });
       setIsVerified(true);
       showToast("Email verified successfully", "success");
       setTimeout(() => navigate("/login"), 3000);
@@ -46,7 +46,7 @@ const EmailVerificationPage = () => {
     if (countdown > 0) return;
     setIsLoading(true);
     try {
-      await axios.post("/api/auth/resend-verification");
+      await axios.post("/auth/resend-verification");
       showToast("Verification email sent successfully", "success");
       setCountdown(60);
     } catch (error) {

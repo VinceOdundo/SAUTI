@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middleware/authMiddleware");
-const { rbac, ROLES } = require("../middleware/rbacMiddleware");
+const { protect, authorize } = require("../middleware/authMiddleware");
 const {
   getStats,
   getActivityTrends,
@@ -14,7 +13,8 @@ const {
 } = require("../controllers/adminController");
 
 // All routes require authentication and admin role
-router.use(authenticateUser, rbac([ROLES.ADMIN]));
+router.use(protect);
+router.use(authorize("admin"));
 
 // Dashboard stats and activity
 router.get("/stats", getStats);

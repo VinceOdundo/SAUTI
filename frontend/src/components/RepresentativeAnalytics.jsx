@@ -46,7 +46,7 @@ const RepresentativeAnalytics = ({ representativeId }) => {
     try {
       setIsLoading(true);
       const response = await axios.get(
-        `/api/representatives/${representativeId}/analytics`
+        `/representatives/${representativeId}/analytics`
       );
       setAnalytics(response.data);
       sessionStorage.setItem(cacheKey, JSON.stringify(response.data));

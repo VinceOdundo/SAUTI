@@ -1,41 +1,78 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const { verifyToken, extractTokens } = require("../utils/tokenUtils");
 
-const authenticateUser = async (req, res, next) => {
+// Protect routes - Authentication middleware
+const protect = async (req, res, next) => {
   try {
-    // Get token from header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "No token provided" });
+    // Get tokens from request
+    const { accessToken, refreshToken } = extractTokens(req);
+
+    if (!accessToken) {
+      return res.status(401).json({ message: "Authentication required" });
     }
 
-    const token = authHeader.split(" ")[1];
+    try {
+      // Verify access token
+      const decoded = verifyToken(accessToken);
+      
+      // Get user from token
+      const user = await User.findById(decoded.userId).select("-password");
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
+      }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
+      // Check if user is active
+      if (user.status !== "active") {
+        return res.status(403).json({ message: "Account is not active" });
+      }
+
+      // Check session version
+      if (user.sessionVersion !== decoded.sessionVersion) {
+        return res.status(401).json({ message: "Session has expired. Please login again" });
+      }
+
+      // Add user to request object
+      req.user = user;
+      next();
+    } catch (error) {
+      if (error.message === "Token has expired" && refreshToken) {
+        // Token expired but refresh token exists - let the refresh token endpoint handle it
+        return res.status(401).json({ 
+          message: "Access token expired",
+          code: "TOKEN_EXPIRED"
+        });
+      }
+
       return res.status(401).json({ message: "Invalid token" });
     }
-
-    // Get user from token
-    const user = await User.findById(decoded.userId).select("-password");
-    if (!user) {
-      return res.status(401).json({ message: "User not found" });
-    }
-
-    // Add user to request object
-    req.user = user;
-    next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    if (error.name === "JsonWebTokenError") {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Token expired" });
-    }
     res.status(500).json({ message: "Server error" });
   }
 };
 
-module.exports = { authenticateUser };
+// Authorization middleware
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `User role ${req.user.role} is not authorized to access this route`
+      });
+    }
+    next();
+  };
+};
+
+// Email verification middleware
+const requireEmailVerification = (req, res, next) => {
+  if (!req.user.emailVerified) {
+    return res.status(403).json({
+      message: "Email verification required",
+      code: "EMAIL_NOT_VERIFIED"
+    });
+  }
+  next();
+};
+
+module.exports = { protect, authorize, requireEmailVerification };

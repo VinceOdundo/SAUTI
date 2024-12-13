@@ -1,6 +1,6 @@
 // API Configuration
 export const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+  process.env.REACT_APP_API_URL;
 
 // File Upload Configuration
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB

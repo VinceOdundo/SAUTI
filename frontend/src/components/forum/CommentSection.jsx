@@ -400,7 +400,7 @@ const CommentSection = ({ postId }) => {
   const fetchComments = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/posts/${postId}/comments`);
+      const response = await fetch(`/posts/${postId}/comments`);
       const data = await response.json();
       setComments(data);
     } catch (error) {

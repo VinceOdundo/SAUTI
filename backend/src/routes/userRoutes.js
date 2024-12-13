@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { rbac, ROLES } = require("../middleware/rbacMiddleware");
-const { authenticateUser } = require("../middleware/authMiddleware");
+const { protect, authorize } = require("../middleware/authMiddleware");
 const {
   getAllUsers,
   updateUserRole,
@@ -10,16 +9,31 @@ const {
 const {
   updateUserProfile,
   getUserProfile,
+  updatePassword,
+  toggleNotifications,
+  updatePrivacySettings,
+  deactivateAccount
 } = require("../controllers/userController");
 
-// User routes
-router.patch("/profile", authenticateUser, updateUserProfile);
+// Public routes
 router.get("/:userId", getUserProfile);
 
+// Protected routes
+router.use(protect);
+
+// User routes
+router.route("/profile")
+  .put(updateUserProfile)
+  .delete(deactivateAccount);
+
+router.put("/password", updatePassword);
+router.put("/notifications", toggleNotifications);
+router.put("/privacy", updatePrivacySettings);
+
 // Admin only routes
-router.use(authenticateUser);
-router.get("/", rbac([ROLES.ADMIN]), getAllUsers);
-router.patch("/:userId/role", rbac([ROLES.ADMIN]), updateUserRole);
-router.delete("/:userId", rbac([ROLES.ADMIN]), deleteUser);
+router.use(authorize('admin'));
+router.get("/", getAllUsers);
+router.put("/:userId/role", updateUserRole);
+router.delete("/:userId", deleteUser);
 
 module.exports = router;

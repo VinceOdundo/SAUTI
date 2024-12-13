@@ -17,7 +17,7 @@ const NotificationList = () => {
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`/api/notifications?filter=${filter}`);
+      const response = await axios.get(`/notifications?filter=${filter}`);
       setNotifications(response.data);
     } catch (error) {
       showToast(
@@ -31,7 +31,7 @@ const NotificationList = () => {
 
   const markAsRead = async (notificationId) => {
     try {
-      await axios.post(`/api/notifications/${notificationId}/read`);
+      await axios.post(`/notifications/${notificationId}/read`);
       setNotifications((prevNotifications) =>
         prevNotifications.map((notification) =>
           notification.id === notificationId
@@ -49,7 +49,7 @@ const NotificationList = () => {
 
   const markAllAsRead = async () => {
     try {
-      await axios.post("/api/notifications/read-all");
+      await axios.post("/notifications/read-all");
       setNotifications((prevNotifications) =>
         prevNotifications.map((notification) => ({
           ...notification,

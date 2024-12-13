@@ -1,36 +1,47 @@
 const Message = require("../models/Message");
 const User = require("../models/User");
+const Follow = require("../models/Follow");
+const io = require("../socket"); // Assuming you have a socket.io setup in a separate file
 
 const sendMessage = async (req, res) => {
   try {
-    const { receiverId, content, attachments } = req.body;
-    const senderId = req.user._id;
+    const { recipientId, content } = req.body;
+    const senderId = req.user.id;
 
-    // Verify receiver exists
-    const receiver = await User.findById(receiverId);
-    if (!receiver) {
-      return res.status(404).json({ message: "Receiver not found" });
-    }
-
-    // Create and save the message
-    const message = await Message.create({
-      sender: senderId,
-      receiver: receiverId,
-      content,
-      attachments,
-    });
-
-    // Populate sender and receiver info
-    await message.populate([
-      { path: "sender", select: "name avatar" },
-      { path: "receiver", select: "name avatar" },
+    // Check if users follow each other
+    const [senderFollows, recipientFollows] = await Promise.all([
+      Follow.findOne({ follower: senderId, following: recipientId }),
+      Follow.findOne({ follower: recipientId, following: senderId })
     ]);
 
-    res.status(201).json({ message });
+    if (!senderFollows || !recipientFollows) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only message users who mutually follow you"
+      });
+    }
+
+    const message = await Message.create({
+      sender: senderId,
+      recipient: recipientId,
+      content,
+    });
+
+    // Emit real-time event
+    io.to(recipientId).emit('new_message', {
+      message,
+      sender: req.user
+    });
+
+    res.status(201).json({
+      success: true,
+      message
+    });
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: "Error sending message",
-      error: error.message,
+      error: error.message
     });
   }
 };

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middlewares/authMiddleware");
-const { rbac, ROLES } = require("../middlewares/rbacMiddleware");
+const { authenticateUser } = require("../middleware/authMiddleware");
+const { rbac, ROLES } = require("../middleware/rbacMiddleware");
 const {
   createFeedback,
   getFeedback,

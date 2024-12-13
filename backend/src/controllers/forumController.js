@@ -30,55 +30,66 @@ const upload = multer({
 }).array("media", 4);
 
 // Create a new post
-exports.createPost = async (req, res, next) => {
+exports.createPost = async (req, res) => {
   try {
+    // Extract hashtags from content
+    const hashtags = req.body.content
+      ? req.body.content.match(/#[a-zA-Z0-9_]+/g) || []
+      : [];
+
+    // Create post data
+    const postData = {
+      content: req.body.content,
+      category: req.body.category || "general",
+      tags: hashtags,
+      author: req.user._id,
+    };
+
+    // Handle location if provided
+    if (req.body.location) {
+      try {
+        postData.location = JSON.parse(req.body.location);
+      } catch (e) {
+        console.error("Error parsing location:", e);
+      }
+    }
+
+    // Handle media upload if present
+    if (req.files && req.files.length > 0) {
+      const file = req.files[0]; // Take first file
+      const fileName = `${uuidv4()}${path.extname(file.originalname)}`;
+      const url = await uploadToStorage(file.buffer, fileName, file.mimetype);
+      postData.media = {
+        url,
+        type: file.mimetype,
+      };
+    }
+
     // Validate post data
-    const validationError = validatePost(req.body);
+    const validationError = validatePost(postData);
     if (validationError) {
       return res.status(400).json({ message: validationError });
     }
 
-    // Handle media uploads if any
-    const mediaUrls = [];
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const fileName = `${uuidv4()}${path.extname(file.originalname)}`;
-        const url = await uploadToStorage(file.buffer, fileName, file.mimetype);
-        mediaUrls.push({ url, type: file.mimetype });
-      }
-    }
-
-    const post = new Post({
-      ...req.body,
-      author: req.user.id,
-      media: mediaUrls,
-      analytics: {
-        views: 0,
-        uniqueViewers: [],
-        engagement: {
-          shares: 0,
-          comments: 0,
-          reactions: {},
-        },
-      },
-    });
-
+    // Create and save post
+    const post = new Post(postData);
     await post.save();
-    await post.populate([
-      { path: "author", select: "name avatar" },
-      { path: "category", select: "name" },
-    ]);
 
-    // Track user activity
-    await updateUserActivity(req.user.id, "post_created");
+    // Populate author details
+    await post.populate("author", "name avatar");
 
     res.status(201).json({
       success: true,
       message: "Post created successfully",
       post,
     });
-  } catch (err) {
-    handleError(err, res);
+  } catch (error) {
+    console.error("Post creation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating post",
+      error: error.message,
+    });
   }
 };
 

@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const forumController = require("../controllers/forumController");
-const { authenticateUser } = require("../middleware/authMiddleware");
+const { protect, authorize } = require("../middleware/authMiddleware");
 const { checkVerificationStatus } = require("../controllers/userController");
 
 // Apply auth middleware to all routes
-router.use(authenticateUser);
+router.use(protect);
 
 // Public routes (still require auth but not verification)
 router.get("/posts", forumController.getPosts);
@@ -32,7 +32,7 @@ router.post("/posts/:postId/reshare", forumController.resharePost);
 router.post("/posts/:postId/report", forumController.reportPost);
 
 // Admin only routes
-router.use(require("../middleware/rbacMiddleware").rbac(["admin"]));
+router.use(authorize("admin"));
 router.post("/posts/:postId/moderate", forumController.moderatePost);
 
 module.exports = router;

@@ -3,8 +3,8 @@ const { createValidationError } = require("../utils/errorHandler");
 
 // Registration schema
 const registrationSchema = Joi.object({
-  name: Joi.string().min(2).max(50).required().messages({
-    "string.min": "Name must be at least 2 characters long",
+  name: Joi.string().min(3).max(50).required().messages({
+    "string.min": "Name must be at least 3 characters long",
     "string.max": "Name cannot exceed 50 characters",
     "any.required": "Name is required",
   }),

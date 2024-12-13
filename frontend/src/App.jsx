@@ -18,9 +18,10 @@ import ProfileWizard from "./components/profile/ProfileWizard";
 import UserDashboard from "./components/dashboard/UserDashboard";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import LandingPage from "./pages/LandingPage";
-import Timeline from "./components/Timeline";
+import Homepage from "./pages/HomePage";
 import { useAuth } from "./hooks/useAuth";
 import "./styles/themes.css";
+import UserProfile from "./pages/UserProfile";
 
 const App = () => {
   return (
@@ -66,6 +67,22 @@ const App = () => {
                       </ProtectedRoute>
                     }
                   />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <UserProfile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile/:userId"
+                    element={
+                      <ProtectedRoute>
+                        <UserProfile />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Routes>
               </div>
             </SocketProvider>
@@ -78,7 +95,7 @@ const App = () => {
 
 const RootRoute = () => {
   const { user } = useAuth();
-  return user ? <Timeline /> : <LandingPage />;
+  return user ? <Homepage /> : <LandingPage />;
 };
 
 export default App;

@@ -25,8 +25,8 @@ const UserDashboard = () => {
     setIsLoading(true);
     try {
       const [statsResponse, activityResponse] = await Promise.all([
-        axios.get("/api/users/stats"),
-        axios.get("/api/users/activity"),
+        axios.get("/users/stats"),
+        axios.get("/users/activity"),
       ]);
       setStats(statsResponse.data);
       setRecentActivity(activityResponse.data);

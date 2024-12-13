@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "../contexts/ToastContext";
 import AppLayout from "../components/layouts/AppLayout";
-import axios from "axios";
+import api from "../config/axios";
 
 const LandingPage = () => {
   const [stats, setStats] = useState({
@@ -20,9 +20,12 @@ const LandingPage = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get("/api/stats/public");
-      setStats(response.data);
+      const response = await api.get("/stats/public");
+      if (response.data) {
+        setStats(response.data);
+      }
     } catch (error) {
+      console.error("Error fetching stats:", error);
       showToast(
         error.response?.data?.message || "Failed to fetch platform stats",
         "error"

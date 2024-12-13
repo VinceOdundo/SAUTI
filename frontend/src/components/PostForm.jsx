@@ -1,20 +1,73 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import { useToast } from "../contexts/ToastContext";
-import LocationPicker from "./post-components/LocationPicker";
+import { createPost } from "../store/slices/forumSlice";
 import axios from "axios";
 
 const PostForm = ({ onPost }) => {
+  const dispatch = useDispatch();
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [location, setLocation] = useState({
-    county: "",
-    constituency: "",
-    ward: "",
-  });
+  const [category, setCategory] = useState("general");
+  const [location, setLocation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [formData, setFormData] = useState({
+    content: "",
+    media: "",
+    category: "general",
+    tags: [],
+    location: null,
+    status: "active"
+  });
   const { showToast } = useToast();
+
+  useEffect(() => {
+    // Check if we have stored location permission
+    const hasLocationPermission = localStorage.getItem("locationPermission");
+    if (hasLocationPermission === "granted") {
+      getCurrentLocation();
+    }
+  }, []);
+
+  const getCurrentLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            // Use reverse geocoding to get place name
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+            );
+            const data = await response.json();
+            setLocation({
+              latitude,
+              longitude,
+              placeName: data.display_name,
+            });
+            localStorage.setItem("locationPermission", "granted");
+          } catch (error) {
+            console.error("Error getting location name:", error);
+            setLocation({ latitude, longitude });
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          localStorage.setItem("locationPermission", "denied");
+        }
+      );
+    }
+  };
+
+  const handleLocationClick = () => {
+    if (location) {
+      setLocation(null); // Toggle location off
+    } else {
+      getCurrentLocation();
+    }
+  };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -33,149 +86,145 @@ const PostForm = ({ onPost }) => {
     setImagePreview(null);
   };
 
+  const extractHashtags = (text) => {
+    const hashtagRegex = /#[a-zA-Z0-9_]+/g;
+    return text.match(hashtagRegex) || [];
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim() && !image) {
-      showToast("Please add some content or an image", "error");
-      return;
-    }
-
     setIsLoading(true);
+
     try {
-      const formData = new FormData();
-      formData.append("content", content);
+      // If there's an image, upload it first
+      let mediaUrl = "";
       if (image) {
-        formData.append("image", image);
-      }
-      if (location.county) {
-        formData.append("location", JSON.stringify(location));
+        const formData = new FormData();
+        formData.append("file", image);
+        const response = await axios.post("/upload", formData);
+        mediaUrl = response.data.url;
       }
 
-      await axios.post("/api/posts", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const postData = {
+        ...formData,
+        media: mediaUrl,
+        location: location ? {
+          coordinates: [location.longitude, location.latitude],
+          placeName: location.placeName
+        } : undefined
+      };
+
+      const response = await dispatch(createPost(postData)).unwrap();
+      showToast("Post created successfully!", "success");
+      setFormData({
+        content: "",
+        media: "",
+        category: "general",
+        tags: [],
+        location: null,
+        status: "active"
       });
-
-      setContent("");
       setImage(null);
       setImagePreview(null);
-      setLocation({ county: "", constituency: "", ward: "" });
-      setIsExpanded(false);
-      showToast("Post created successfully", "success");
-      if (onPost) onPost();
+      if (onPost) onPost(response);
     } catch (error) {
-      showToast(
-        error.response?.data?.message || "Failed to create post",
-        "error"
-      );
+      showToast(error.message || "Failed to create post", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="card">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Header */}
-        <div className="p-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-primary">Create Post</h2>
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <textarea
+        value={formData.content}
+        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+        placeholder="What's happening?"
+        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+        rows={isExpanded ? 4 : 2}
+        onFocus={() => setIsExpanded(true)}
+      />
 
-        {/* Content */}
-        <div className="p-4 space-y-4">
-          <textarea
-            placeholder="What's on your mind?"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            onFocus={() => setIsExpanded(true)}
-            className="w-full min-h-[100px] bg-base text-primary placeholder-text-secondary border border-border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none transition-base"
-          />
-
-          {isExpanded && (
-            <>
-              {/* Image Upload */}
-              <div className="space-y-2">
-                {imagePreview ? (
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="max-h-64 rounded-lg object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={removeImage}
-                      className="absolute top-2 right-2 p-1 rounded-full bg-base text-secondary hover:text-primary transition-base"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="btn btn-secondary flex items-center space-x-2 cursor-pointer">
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>Add Image</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                )}
-              </div>
-
-              {/* Location Picker */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-primary">
-                  Location (Optional)
-                </label>
-                <LocationPicker location={location} onChange={setLocation} />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-border flex justify-end">
-          <button
-            type="submit"
-            disabled={isLoading || (!content.trim() && !image)}
-            className={`btn btn-primary ${
-              isLoading || (!content.trim() && !image)
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
+      {isExpanded && (
+        <>
+          <select
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            className="w-full p-2 border rounded-lg"
+            required
           >
-            {isLoading ? "Posting..." : "Post"}
-          </button>
-        </div>
-      </form>
-    </div>
+            <option value="general">General</option>
+            <option value="policy">Policy</option>
+            <option value="development">Development</option>
+            <option value="education">Education</option>
+            <option value="health">Health</option>
+            <option value="environment">Environment</option>
+            <option value="governance">Governance</option>
+            <option value="other">Other</option>
+          </select>
+
+          <div className="flex items-center space-x-4">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+              id="image-upload"
+            />
+            <label
+              htmlFor="image-upload"
+              className="px-4 py-2 text-sm bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200"
+            >
+              Add Image
+            </label>
+            <button
+              type="button"
+              onClick={handleLocationClick}
+              className={`px-4 py-2 text-sm rounded-lg cursor-pointer ${
+                location
+                  ? "bg-blue-100 text-blue-600"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              {location
+                ? "📍 " + (location.placeName || "Location added")
+                : "📍 Add location"}
+            </button>
+          </div>
+
+          {imagePreview && (
+            <div className="relative">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="max-h-48 rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          <div className="text-sm text-gray-500">
+            {formData.content.length}/310 • Use # to add tags
+          </div>
+        </>
+      )}
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className={`w-full py-2 px-4 rounded-lg ${
+          isLoading ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+        } text-white font-medium`}
+      >
+        {isLoading ? "Posting..." : "Post"}
+      </button>
+    </form>
   );
 };
 

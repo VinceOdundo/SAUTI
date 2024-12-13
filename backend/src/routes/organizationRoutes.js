@@ -1,50 +1,62 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middleware/authMiddleware");
-const { rbac, ROLES } = require("../middleware/rbacMiddleware");
-const { upload, handleUploadError } = require("../middleware/uploadMiddleware");
+const { protect, authorize } = require("../middleware/authMiddleware");
+const { upload } = require("../middleware/uploadMiddleware");
 const {
   registerOrganization,
   verifyOrganization,
   getOrganization,
   updateOrganization,
   addRepresentative,
+  removeRepresentative,
+  getOrganizationProjects,
+  createProject,
+  updateProject,
+  deleteProject,
+  getOrganizationStats,
+  getOrganizationInteractions,
+  updateOrganizationSettings,
+  getVerificationStatus,
+  deleteOrganization
 } = require("../controllers/organizationController");
 
-// Organization registration with file upload
-router.post(
-  "/register",
-  authenticateUser,
-  upload.single("certificate"),
-  handleUploadError,
-  registerOrganization
-);
+// Public routes
+router.get("/:organizationId", getOrganization);
+router.get("/:organizationId/projects", getOrganizationProjects);
 
-// Get organization details
-router.get("/:organizationId", authenticateUser, getOrganization);
+// Protected routes
+router.use(protect);
 
-// Update organization
-router.patch(
-  "/:organizationId",
-  authenticateUser,
-  upload.single("certificate"),
-  handleUploadError,
-  updateOrganization
-);
+// Organization registration and verification
+router.post("/register", upload.single("certificate"), registerOrganization);
+router.get("/verification-status/:organizationId", getVerificationStatus);
 
-// Verify organization (admin only)
-router.post(
-  "/:organizationId/verify",
-  authenticateUser,
-  rbac([ROLES.ADMIN]),
-  verifyOrganization
-);
+// Organization management (requires organization role)
+router.route("/:organizationId")
+  .put(authorize("organization"), upload.single("certificate"), updateOrganization)
+  .delete(authorize("admin"), deleteOrganization);
 
-// Add representative
-router.post(
-  "/:organizationId/representatives",
-  authenticateUser,
-  addRepresentative
-);
+// Representatives management
+router.route("/:organizationId/representatives")
+  .post(authorize("organization"), addRepresentative)
+  .delete(authorize("organization"), removeRepresentative);
+
+// Project management
+router.route("/:organizationId/projects")
+  .post(authorize("organization"), createProject);
+
+router.route("/:organizationId/projects/:projectId")
+  .put(authorize("organization"), updateProject)
+  .delete(authorize("organization"), deleteProject);
+
+// Organization insights
+router.get("/:organizationId/stats", authorize("organization"), getOrganizationStats);
+router.get("/:organizationId/interactions", authorize("organization"), getOrganizationInteractions);
+
+// Organization settings
+router.put("/:organizationId/settings", authorize("organization"), updateOrganizationSettings);
+
+// Organization verification (admin only)
+router.post("/:organizationId/verify", authorize("admin"), verifyOrganization);
 
 module.exports = router;

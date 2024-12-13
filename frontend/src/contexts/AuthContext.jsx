@@ -1,6 +1,5 @@
 import React, { createContext, useEffect, useState } from "react";
-import axios from "axios";
-import { API_BASE_URL } from "../config";
+import api from "../config/axios";
 
 const AuthContext = createContext(undefined);
 
@@ -11,193 +10,70 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      axios
-        .get(`${API_BASE_URL}/auth/profile`)
-        .then((response) => {
-          setUser(response.data.user);
-          setIsAuthenticated(true);
-        })
-        .catch(() => {
-          localStorage.removeItem("token");
-          delete axios.defaults.headers.common["Authorization"];
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
+    checkAuth();
   }, []);
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
-      const response = await axios.get(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await api.get("/auth/me");
       setUser(response.data);
+      setIsAuthenticated(true);
     } catch (error) {
       console.error("Auth check failed:", error);
-      localStorage.removeItem("token");
+      setUser(null);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
-      setError(null);
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-        email,
+      const response = await api.post("/auth/login", {
+        identifier,
         password,
       });
 
-      const { token, user: userData } = response.data;
-      localStorage.setItem("token", token);
-      setUser(userData);
-
-      // Configure axios defaults for future requests
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      return userData;
+      const { user, accessToken } = response.data;
+      localStorage.setItem("token", accessToken);
+      setUser(user);
+      setIsAuthenticated(true);
+      return user;
     } catch (error) {
-      setError(
-        error.response?.data?.message || "An error occurred during login"
-      );
+      console.error("Login failed:", error);
       throw error;
     }
   };
 
-  const register = async (formData) => {
+  const register = async (userData) => {
     try {
-      setError(null);
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/register`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      const { token, user: userData } = response.data;
-      localStorage.setItem("token", token);
-      setUser(userData);
-
-      // Configure axios defaults for future requests
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      return userData;
+      const response = await api.post("/auth/register", userData);
+      return response.data;
     } catch (error) {
-      setError(
-        error.response?.data?.message || "An error occurred during registration"
-      );
+      console.error("Registration failed:", error);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/auth/logout`);
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
+      await api.post("/auth/logout");
       localStorage.removeItem("token");
-      delete axios.defaults.headers.common["Authorization"];
       setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error("Logout failed:", error);
+      throw error;
     }
   };
 
   const updateProfile = async (profileData) => {
     try {
-      setError(null);
-      const response = await axios.put(
-        `${API_BASE_URL}/auth/profile`,
-        profileData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      setUser(response.data);
+      const response = await api.put("/users/profile", profileData);
+      setUser(response.data.user);
       return response.data;
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "An error occurred while updating profile"
-      );
-      throw error;
-    }
-  };
-
-  const resetPassword = async (email) => {
-    try {
-      setError(null);
-      await axios.post(`${API_BASE_URL}/auth/reset-password`, { email });
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "An error occurred while requesting password reset"
-      );
-      throw error;
-    }
-  };
-
-  const confirmResetPassword = async (token, password) => {
-    try {
-      setError(null);
-      await axios.post(`${API_BASE_URL}/auth/reset-password/${token}`, {
-        password,
-      });
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "An error occurred while resetting password"
-      );
-      throw error;
-    }
-  };
-
-  const verifyEmail = async (token) => {
-    try {
-      setError(null);
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/verify-email/${token}`
-      );
-      setUser(response.data);
-      return response.data;
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "An error occurred while verifying email"
-      );
-      throw error;
-    }
-  };
-
-  const resendVerificationEmail = async () => {
-    try {
-      setError(null);
-      await axios.post(`${API_BASE_URL}/auth/resend-verification`);
-    } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "An error occurred while resending verification email"
-      );
+      console.error("Profile update failed:", error);
       throw error;
     }
   };
@@ -208,13 +84,10 @@ export const AuthProvider = ({ children }) => {
     error,
     isAuthenticated,
     login,
-    register,
     logout,
+    register,
     updateProfile,
-    resetPassword,
-    confirmResetPassword,
-    verifyEmail,
-    resendVerificationEmail,
+    checkAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -23,7 +23,7 @@ const Timeline = () => {
   const fetchPosts = async (pageNum = 1) => {
     try {
       const response = await fetch(
-        `/api/posts?filter=${filter}&page=${pageNum}&limit=10`,
+        `/posts?filter=${filter}&page=${pageNum}&limit=10`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -59,7 +59,7 @@ const Timeline = () => {
 
   const handleLike = async (postId) => {
     try {
-      const response = await fetch(`/api/posts/${postId}/like`, {
+      const response = await fetch(`/posts/${postId}/like`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -85,7 +85,7 @@ const Timeline = () => {
 
   const handleShare = async (postId) => {
     try {
-      const response = await fetch(`/api/posts/${postId}/share`, {
+      const response = await fetch(`/posts/${postId}/share`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

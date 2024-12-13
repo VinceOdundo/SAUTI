@@ -90,7 +90,72 @@ const getUserProfile = async (req, res) => {
   }
 };
 
-exports.register = async (req, res) => {
+const updatePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user._id);
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating password", error: error.message });
+  }
+};
+
+const toggleNotifications = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.settings.notifications = req.body.enabled;
+    await user.save();
+    
+    res.json({ message: "Notification settings updated", enabled: user.settings.notifications });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating notification settings", error: error.message });
+  }
+};
+
+const updatePrivacySettings = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const { profileVisibility, messagePrivacy } = req.body;
+    
+    user.settings.privacy = {
+      ...user.settings.privacy,
+      profileVisibility: profileVisibility || user.settings.privacy.profileVisibility,
+      messagePrivacy: messagePrivacy || user.settings.privacy.messagePrivacy
+    };
+    
+    await user.save();
+    res.json({ message: "Privacy settings updated", settings: user.settings.privacy });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating privacy settings", error: error.message });
+  }
+};
+
+const deactivateAccount = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    user.status = 'inactive';
+    user.deactivatedAt = new Date();
+    await user.save();
+    
+    res.json({ message: "Account deactivated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deactivating account", error: error.message });
+  }
+};
+
+const register = async (req, res) => {
   try {
     const { email, password, username, role } = req.body;
 
@@ -163,7 +228,7 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { identifier, password } = req.body;
 
@@ -214,7 +279,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.forgotPassword = async (req, res) => {
+const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
@@ -258,7 +323,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-exports.resetPassword = async (req, res) => {
+const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
@@ -302,7 +367,7 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
-exports.verifyEmail = async (req, res) => {
+const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
@@ -344,7 +409,7 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
-exports.uploadAvatar = async (req, res) => {
+const uploadAvatar = async (req, res) => {
   upload(req, res, async function (err) {
     if (err instanceof multer.MulterError) {
       return res.status(400).json({
@@ -394,7 +459,7 @@ exports.uploadAvatar = async (req, res) => {
   });
 };
 
-exports.updateProfile = async (req, res, next) => {
+const updateProfile = async (req, res, next) => {
   try {
     const { error } = validateUser(req.body);
     if (error) {
@@ -420,7 +485,7 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
-exports.getProfile = async (req, res, next) => {
+const getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id)
       .select("-password")
@@ -437,7 +502,7 @@ exports.getProfile = async (req, res, next) => {
 };
 
 // Add verification status check middleware
-exports.checkVerificationStatus = async (req, res, next) => {
+const checkVerificationStatus = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user.isVerified) {
@@ -449,17 +514,20 @@ exports.checkVerificationStatus = async (req, res, next) => {
   }
 };
 
-// Export functions
 module.exports = {
   updateUserProfile,
   getUserProfile,
-  forgotPassword: exports.forgotPassword,
-  resetPassword: exports.resetPassword,
-  verifyEmail: exports.verifyEmail,
-  uploadAvatar: exports.uploadAvatar,
-  updateProfile: exports.updateProfile,
-  getProfile: exports.getProfile,
-  checkVerificationStatus: exports.checkVerificationStatus,
-  register: exports.register,
-  login: exports.login,
+  updatePassword,
+  toggleNotifications,
+  updatePrivacySettings,
+  deactivateAccount,
+  register,
+  login,
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  uploadAvatar,
+  updateProfile,
+  getProfile,
+  checkVerificationStatus
 };

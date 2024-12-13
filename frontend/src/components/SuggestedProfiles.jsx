@@ -9,7 +9,7 @@ const SuggestedProfiles = () => {
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await axios.get("/api/users/suggested");
+        const response = await axios.get("/users/suggested");
         setProfiles(response.data.profiles);
       } catch (error) {
         console.error("Error fetching suggested profiles:", error);

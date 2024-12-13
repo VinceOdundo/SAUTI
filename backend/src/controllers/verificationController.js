@@ -1,307 +1,302 @@
-const { validationResult } = require("express-validator");
+const User = require("../models/User");
+const Organization = require("../models/Organization");
 const VerificationRequest = require("../models/VerificationRequest");
-const {
-  uploadToLocal,
-  deleteFromLocal,
-} = require("../services/storageService");
-const { sendVerificationStatusEmail } = require("../services/emailService");
-const { validateDocument } = require("../utils/documentUtils");
-
-// Maximum file size (5MB)
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const { uploadToS3, deleteFromS3 } = require("../utils/s3");
+const { sendVerificationEmail, sendVerificationStatusEmail, sendAdminNotificationEmail } = require("../services/emailService");
+const { validateVerificationDocuments } = require("../utils/documentValidator");
+const { NotFoundError, ValidationError } = require("../utils/errors");
 
 exports.submitVerification = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        status: "error",
-        errors: errors.array(),
-      });
-    }
+    const { documentType, documentNumber, entityType = 'user' } = req.body;
+    const { idDocument, selfie, additionalDocuments = [] } = req.files;
+    const userId = req.user.id;
 
-    const { documentType } = req.body;
-    const file = req.file;
-
-    if (!file) {
-      return res.status(400).json({
-        status: "error",
-        message: "No document uploaded",
-      });
-    }
-
-    // Validate file size
-    if (file.size > MAX_FILE_SIZE) {
-      return res.status(400).json({
-        status: "error",
-        message: "File size exceeds 5MB limit",
-      });
-    }
-
-    // Validate document type and content
-    const validationResult = validateDocument(file);
+    // Validate document format and size
+    const validationResult = await validateVerificationDocuments(idDocument, selfie, additionalDocuments);
     if (!validationResult.isValid) {
-      return res.status(400).json({
-        status: "error",
-        message: validationResult.message,
-      });
+      throw new ValidationError(validationResult.error);
     }
 
-    // Check for existing pending request
-    const existingRequest = await VerificationRequest.findOne({
-      user: req.user._id,
-      status: "pending",
-    });
+    // Upload documents to S3
+    const uploadPromises = [
+      uploadToS3(idDocument, `verifications/${userId}/id`),
+      uploadToS3(selfie, `verifications/${userId}/selfie`)
+    ];
 
-    if (existingRequest) {
-      return res.status(400).json({
-        status: "error",
-        message: "You already have a pending verification request",
-      });
-    }
-
-    // Upload document to local storage
-    const uploadResult = await uploadToLocal(file);
-
-    const verificationRequest = await VerificationRequest.create({
-      user: req.user._id,
-      documentType,
-      document: {
-        url: uploadResult.Location,
-        key: uploadResult.Key,
-        type: file.mimetype,
-        path: uploadResult.path,
-      },
-      status: "pending",
-    });
-
-    // Update user's verification status
-    await req.user.updateOne({
-      $set: {
-        verificationStatus: "pending",
-        lastVerificationRequest: verificationRequest._id,
-      },
-    });
-
-    res.status(201).json({
-      status: "success",
-      message: "Verification request submitted successfully",
-      request: {
-        id: verificationRequest._id,
-        status: verificationRequest.status,
-        documentType: verificationRequest.documentType,
-        submittedAt: verificationRequest.createdAt,
-      },
-    });
-  } catch (error) {
-    console.error("Verification submission error:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Error submitting verification request",
-      error: process.env.NODE_ENV === "development" ? error.message : undefined,
-    });
-  }
-};
-
-exports.getPendingVerifications = async (req, res) => {
-  try {
-    // Validate user has admin access
-    if (req.user.role !== "admin") {
-      return res.status(403).json({
-        status: "error",
-        message: "Access denied",
-      });
-    }
-
-    const { status = "pending", page = 1, limit = 10 } = req.query;
-    const skip = (page - 1) * limit;
-
-    const verifications = await VerificationRequest.find({ status })
-      .populate("user", "name email")
-      .sort("-createdAt")
-      .skip(skip)
-      .limit(limit);
-
-    const total = await VerificationRequest.countDocuments({ status });
-
-    res.json({
-      status: "success",
-      data: verifications,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error) {
-    console.error("Get verifications error:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Error fetching verification requests",
-    });
-  }
-};
-
-exports.reviewVerification = async (req, res) => {
-  try {
-    // Validate user has admin access
-    if (req.user.role !== "admin") {
-      return res.status(403).json({
-        status: "error",
-        message: "Access denied",
-      });
-    }
-
-    const { id } = req.params;
-    const { status, notes } = req.body;
-
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({
-        status: "error",
-        message: "Invalid status",
-      });
-    }
-
-    const verification = await VerificationRequest.findById(id).populate(
-      "user",
-      "email"
-    );
-
-    if (!verification) {
-      return res.status(404).json({
-        status: "error",
-        message: "Verification request not found",
-      });
-    }
-
-    // Prevent reviewing already processed requests
-    if (verification.status !== "pending") {
-      return res.status(400).json({
-        status: "error",
-        message: "This request has already been processed",
-      });
-    }
-
-    // If rejected, delete the document from local storage
-    if (status === "rejected") {
-      try {
-        await deleteFromLocal(verification.document.key);
-      } catch (error) {
-        console.error("Error deleting rejected document:", error);
-        // Continue with the review process even if deletion fails
+    // Upload additional documents if provided
+    const additionalDocsUrls = [];
+    if (additionalDocuments.length > 0) {
+      for (let i = 0; i < additionalDocuments.length; i++) {
+        uploadPromises.push(
+          uploadToS3(additionalDocuments[i], `verifications/${userId}/additional_${i}`)
+        );
       }
     }
 
-    verification.status = status;
-    verification.reviewedBy = req.user._id;
-    verification.reviewedAt = Date.now();
-    verification.reviewNotes = notes;
+    const uploadedUrls = await Promise.all(uploadPromises);
+    const [idDocumentUrl, selfieUrl, ...additionalUrls] = uploadedUrls;
 
-    await verification.save();
-
-    // Update user's verification status
-    await verification.user.updateOne({
-      $set: {
-        verificationStatus: status,
-        verifiedAt: status === "approved" ? Date.now() : undefined,
-      },
+    // Create verification request
+    const verificationRequest = await VerificationRequest.create({
+      user: userId,
+      entityType,
+      documentType,
+      documentNumber,
+      documentUrl: idDocumentUrl,
+      selfieUrl: selfieUrl,
+      additionalDocuments: additionalUrls.map((url, index) => ({
+        url,
+        name: additionalDocuments[index]?.originalname || `Additional Document ${index + 1}`
+      })),
+      status: 'pending',
+      submittedAt: new Date()
     });
 
-    // Send email notification
-    await sendVerificationStatusEmail(verification.user.email, status, notes);
+    // Update entity verification status
+    if (entityType === 'organization') {
+      await Organization.findOneAndUpdate(
+        { representatives: { $elemMatch: { user: userId, role: 'admin' } } },
+        {
+          verificationStatus: 'pending',
+          'verificationDocuments.submittedAt': new Date(),
+          $set: {
+            'verificationDocuments.certificate.url': idDocumentUrl,
+            'verificationDocuments.additionalDocs': additionalUrls.map((url, index) => ({
+              url,
+              name: additionalDocuments[index]?.originalname || `Additional Document ${index + 1}`
+            }))
+          }
+        }
+      );
+    } else {
+      await User.findByIdAndUpdate(userId, {
+        verificationStatus: 'pending',
+        'verification.documentType': documentType,
+        'verification.documentNumber': documentNumber,
+        'verification.submittedAt': new Date()
+      });
+    }
 
-    res.json({
-      status: "success",
-      message: `Verification request ${status}`,
-      verification: {
-        id: verification._id,
-        status: verification.status,
-        reviewedAt: verification.reviewedAt,
-        notes: verification.reviewNotes,
-      },
+    // Send notifications
+    await Promise.all([
+      sendVerificationStatusEmail(req.user.email, 'submitted', req.user.name),
+      sendAdminNotificationEmail('verification_request', {
+        requestId: verificationRequest._id,
+        entityType,
+        userName: req.user.name
+      })
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: "Verification request submitted successfully",
+      request: verificationRequest
     });
   } catch (error) {
-    console.error("Review verification error:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Error reviewing verification request",
+    // Clean up uploaded files if there was an error
+    if (error.uploadedUrls) {
+      await Promise.all(error.uploadedUrls.map(url => deleteFromS3(url)));
+    }
+
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Error submitting verification request",
+      error: error.details || error.message
+    });
+  }
+};
+
+exports.approveVerification = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { notes, validUntil } = req.body;
+
+    const verificationRequest = await VerificationRequest.findById(requestId)
+      .populate('user');
+
+    if (!verificationRequest) {
+      throw new NotFoundError("Verification request not found");
+    }
+
+    // Update verification request
+    verificationRequest.status = 'approved';
+    verificationRequest.reviewedBy = req.user.id;
+    verificationRequest.reviewedAt = new Date();
+    verificationRequest.notes = notes;
+    verificationRequest.validUntil = validUntil;
+    await verificationRequest.save();
+
+    // Update entity status
+    if (verificationRequest.entityType === 'organization') {
+      await Organization.findOneAndUpdate(
+        { representatives: { $elemMatch: { user: verificationRequest.user._id, role: 'admin' } } },
+        {
+          verified: true,
+          verificationStatus: 'approved',
+          'verificationDocuments.certificate.verified': true,
+          'verificationDocuments.certificate.verifiedAt': new Date(),
+          'verificationDocuments.certificate.verifiedBy': req.user.id
+        }
+      );
+    } else {
+      await User.findByIdAndUpdate(verificationRequest.user._id, {
+        verificationStatus: 'approved',
+        'verification.approvedAt': new Date(),
+        'verification.approvedBy': req.user.id,
+        'verification.validUntil': validUntil
+      });
+    }
+
+    // Send notifications
+    await Promise.all([
+      sendVerificationStatusEmail(
+        verificationRequest.user.email,
+        'approved',
+        verificationRequest.user.name,
+        {
+          notes,
+          validUntil
+        }
+      ),
+      sendAdminNotificationEmail('verification_approved', {
+        requestId: verificationRequest._id,
+        entityType: verificationRequest.entityType,
+        userName: verificationRequest.user.name,
+        adminName: req.user.name
+      })
+    ]);
+
+    res.json({
+      success: true,
+      message: "Verification request approved",
+      request: verificationRequest
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Error approving verification request",
+      error: error.details || error.message
+    });
+  }
+};
+
+exports.rejectVerification = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { reason, notes } = req.body;
+
+    const verificationRequest = await VerificationRequest.findById(requestId)
+      .populate('user');
+
+    if (!verificationRequest) {
+      throw new NotFoundError("Verification request not found");
+    }
+
+    // Update verification request
+    verificationRequest.status = 'rejected';
+    verificationRequest.reviewedBy = req.user.id;
+    verificationRequest.reviewedAt = new Date();
+    verificationRequest.rejectionReason = reason;
+    verificationRequest.notes = notes;
+    await verificationRequest.save();
+
+    // Update entity status
+    if (verificationRequest.entityType === 'organization') {
+      await Organization.findOneAndUpdate(
+        { representatives: { $elemMatch: { user: verificationRequest.user._id, role: 'admin' } } },
+        {
+          verificationStatus: 'rejected',
+          'verificationDocuments.certificate.verified': false
+        }
+      );
+    } else {
+      await User.findByIdAndUpdate(verificationRequest.user._id, {
+        verificationStatus: 'rejected',
+        'verification.rejectedAt': new Date(),
+        'verification.rejectedBy': req.user.id,
+        'verification.rejectionReason': reason
+      });
+    }
+
+    // Clean up S3 files
+    const filesToDelete = [
+      verificationRequest.documentUrl,
+      verificationRequest.selfieUrl,
+      ...(verificationRequest.additionalDocuments || []).map(doc => doc.url)
+    ];
+    await Promise.all(filesToDelete.map(url => deleteFromS3(url)));
+
+    // Send notifications
+    await Promise.all([
+      sendVerificationStatusEmail(
+        verificationRequest.user.email,
+        'rejected',
+        verificationRequest.user.name,
+        {
+          reason,
+          notes
+        }
+      ),
+      sendAdminNotificationEmail('verification_rejected', {
+        requestId: verificationRequest._id,
+        entityType: verificationRequest.entityType,
+        userName: verificationRequest.user.name,
+        adminName: req.user.name,
+        reason
+      })
+    ]);
+
+    res.json({
+      success: true,
+      message: "Verification request rejected",
+      request: verificationRequest
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Error rejecting verification request",
+      error: error.details || error.message
     });
   }
 };
 
 exports.getVerificationStatus = async (req, res) => {
   try {
-    const verification = await VerificationRequest.findOne({
-      user: req.user._id,
-    })
-      .sort("-createdAt")
-      .select("-document.path"); // Don't expose internal file path
+    const userId = req.user.id;
+    const entityType = req.query.entityType || 'user';
 
-    if (!verification) {
-      return res.status(404).json({
-        status: "error",
-        message: "No verification request found",
+    let verificationStatus;
+    if (entityType === 'organization') {
+      const organization = await Organization.findOne({
+        representatives: { $elemMatch: { user: userId, role: 'admin' } }
       });
+      verificationStatus = organization ? {
+        status: organization.verificationStatus,
+        documents: organization.verificationDocuments,
+        verified: organization.verified
+      } : null;
+    } else {
+      const user = await User.findById(userId).select('verificationStatus verification');
+      verificationStatus = user ? {
+        status: user.verificationStatus,
+        verification: user.verification
+      } : null;
+    }
+
+    if (!verificationStatus) {
+      throw new NotFoundError("Verification status not found");
     }
 
     res.json({
-      status: "success",
-      data: {
-        id: verification._id,
-        status: verification.status,
-        documentType: verification.documentType,
-        submittedAt: verification.createdAt,
-        reviewedAt: verification.reviewedAt,
-        notes: verification.reviewNotes,
-      },
+      success: true,
+      verificationStatus
     });
   } catch (error) {
-    console.error("Get verification status error:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Error fetching verification status",
-    });
-  }
-};
-
-// Serve document files
-exports.getDocument = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const verification = await VerificationRequest.findById(id);
-
-    if (!verification) {
-      return res.status(404).json({
-        status: "error",
-        message: "Document not found",
-      });
-    }
-
-    // Check if user has permission to access this document
-    if (
-      verification.user.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
-    ) {
-      return res.status(403).json({
-        status: "error",
-        message: "Access denied",
-      });
-    }
-
-    // Set appropriate headers
-    res.setHeader("Content-Type", verification.document.type);
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="${verification.document.key}"`
-    );
-
-    res.sendFile(verification.document.path);
-  } catch (error) {
-    console.error("Get document error:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Error fetching document",
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Error fetching verification status",
+      error: error.details || error.message
     });
   }
 };

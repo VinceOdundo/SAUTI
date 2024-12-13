@@ -55,12 +55,10 @@ const OrganizationRegistrationForm = () => {
   };
 
   const handleFocusChange = (e) => {
-    const { value, checked } = e.target;
+    const value = Array.from(e.target.selectedOptions, (option) => option.value);
     setFormData((prev) => ({
       ...prev,
-      focus: checked
-        ? [...prev.focus, value]
-        : prev.focus.filter((item) => item !== value),
+      focus: value,
     }));
   };
 
@@ -92,27 +90,25 @@ const OrganizationRegistrationForm = () => {
     }
   };
 
-  const organizationTypes = [
-    "NGO",
-    "CBO",
-    "Faith Based",
-    "Government Agency",
-    "Private Company",
-    "Other",
-  ];
-
   const focusAreas = [
     "Education",
     "Health",
     "Environment",
     "Human Rights",
-    "Economic Empowerment",
-    "Youth Development",
-    "Women Empowerment",
+    "Youth",
+    "Women",
+    "Governance",
     "Agriculture",
     "Technology",
+    "Economic Empowerment",
+    "Disability Rights",
+    "Mental Health",
+    "Child Protection",
+    "Elder Care",
     "Other",
   ];
+
+  const organizationTypes = ["NGO", "CBO", "Foundation", "Trust", "Association"];
 
   if (loading) return <LoadingSpinner />;
 
@@ -142,16 +138,16 @@ const OrganizationRegistrationForm = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2">
                 Organization Type
               </label>
               <select
                 name="type"
                 value={formData.type}
                 onChange={handleInputChange}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
               >
                 <option value="">Select Type</option>
                 {organizationTypes.map((type) => (
@@ -233,28 +229,27 @@ const OrganizationRegistrationForm = () => {
         </div>
 
         {/* Focus Areas */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Focus Areas</h3>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2">
+            Focus Areas
+          </label>
+          <select
+            multiple
+            name="focus"
+            value={formData.focus}
+            onChange={handleFocusChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            required
+          >
             {focusAreas.map((area) => (
-              <div key={area} className="flex items-center">
-                <input
-                  type="checkbox"
-                  id={area}
-                  value={area}
-                  checked={formData.focus.includes(area)}
-                  onChange={handleFocusChange}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor={area}
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  {area}
-                </label>
-              </div>
+              <option key={area} value={area}>
+                {area}
+              </option>
             ))}
-          </div>
+          </select>
+          <p className="text-gray-600 text-xs italic">
+            Hold Ctrl/Cmd to select multiple areas
+          </p>
         </div>
 
         {/* Description */}

@@ -10,7 +10,7 @@ const RepresentativePosts = () => {
   useEffect(() => {
     const fetchRepresentativePosts = async () => {
       try {
-        const response = await axios.get("/api/posts/representatives");
+        const response = await axios.get("/posts/representatives");
         setPosts(response.data.posts);
       } catch (error) {
         console.error("Error fetching representative posts:", error);

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { protect, authorize } = require("../middleware/auth");
+const { authenticateUser } = require("../middleware/authMiddleware");
+const { rbac } = require("../middleware/rbacMiddleware");
 const {
   register,
   login,
@@ -20,7 +21,7 @@ router.post("/reset-password/:token", resetPassword);
 router.get("/verify-email/:token", verifyEmail);
 
 // Protected routes
-router.use(protect); // Apply authentication middleware to all routes below
+router.use(authenticateUser);
 
 // Profile routes
 router.route("/profile").get(getUserProfile).put(updateUserProfile);
@@ -28,7 +29,7 @@ router.route("/profile").get(getUserProfile).put(updateUserProfile);
 router.post("/profile/avatar", uploadAvatar);
 
 // Admin only routes
-router.get("/users", authorize("admin"), async (req, res) => {
+router.get("/users", rbac("admin"), async (req, res) => {
   try {
     const users = await User.find().select("-password");
     res.json({ success: true, users });

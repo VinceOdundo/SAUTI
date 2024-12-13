@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { authenticateUser } = require("../middleware/authMiddleware");
+const { protect } = require("../middleware/authMiddleware");
 const {
   getStats,
   getRecentActivity,
@@ -19,7 +19,7 @@ const {
 } = require("../controllers/citizenController");
 
 // All routes require authentication
-router.use(authenticateUser);
+router.use(protect);
 
 // Dashboard stats and activity
 router.get("/stats", getStats);

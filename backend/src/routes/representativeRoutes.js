@@ -1,8 +1,6 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { authenticateUser } = require("../middleware/authMiddleware");
-const { rbac, ROLES } = require("../middleware/rbacMiddleware");
-const { upload, handleUploadError } = require("../middleware/uploadMiddleware");
+const { protect, authorize } = require('../middleware/authMiddleware');
 const {
   registerRepresentative,
   verifyRepresentative,
@@ -11,63 +9,44 @@ const {
   followRepresentative,
   unfollowRepresentative,
   getRepresentativeStats,
-} = require("../controllers/representativeController");
+  getRepresentatives,
+  getRepresentativeProfile,
+  addReview,
+  getInteractions,
+  handleCitizenRequest,
+  getSchedule,
+  updateAvailability,
+  scheduleAppointment,
+  getPerformanceMetrics
+} = require('../controllers/representativeController');
 
-// Configure multer for multiple file uploads
-const uploadFields = upload.fields([
-  { name: "idCard", maxCount: 1 },
-  { name: "certificate", maxCount: 1 },
-  { name: "additionalDocs", maxCount: 5 },
-]);
+// Public routes
+router.get('/', getRepresentatives);
+router.get('/:representativeId', getRepresentative);
+router.get('/:representativeId/profile', getRepresentativeProfile);
+router.get('/:representativeId/stats', getRepresentativeStats);
 
-// Representative registration
-router.post(
-  "/register",
-  authenticateUser,
-  uploadFields,
-  handleUploadError,
-  registerRepresentative
-);
+// Protected routes (requires authentication)
+router.use(protect);
 
-// Get representative details
-router.get("/:representativeId", authenticateUser, getRepresentative);
+// Representative registration and profile
+router.post('/', registerRepresentative);
+router.put('/:representativeId', authorize('representative'), updateRepresentative);
 
-// Update representative
-router.patch(
-  "/:representativeId",
-  authenticateUser,
-  uploadFields,
-  handleUploadError,
-  updateRepresentative
-);
+// Citizen interactions with representatives
+router.post('/:representativeId/follow', authorize('citizen'), followRepresentative);
+router.delete('/:representativeId/follow', authorize('citizen'), unfollowRepresentative);
+router.post('/:representativeId/reviews', authorize('citizen'), addReview);
+router.post('/:representativeId/appointments', authorize('citizen'), scheduleAppointment);
 
-// Verify representative (admin only)
-router.post(
-  "/:representativeId/verify",
-  authenticateUser,
-  rbac([ROLES.ADMIN]),
-  verifyRepresentative
-);
+// Representative-specific routes
+router.get('/:representativeId/interactions', authorize('representative'), getInteractions);
+router.put('/:representativeId/interactions/:interactionId', authorize('representative'), handleCitizenRequest);
+router.get('/:representativeId/schedule', authorize('representative'), getSchedule);
+router.put('/:representativeId/availability', authorize('representative'), updateAvailability);
+router.get('/:representativeId/metrics', authorize('representative'), getPerformanceMetrics);
 
-// Follow/unfollow routes
-router.post(
-  "/:representativeId/follow",
-  authenticateUser,
-  followRepresentative
-);
-
-router.post(
-  "/:representativeId/unfollow",
-  authenticateUser,
-  unfollowRepresentative
-);
-
-// Get representative stats
-router.get(
-  "/:representativeId/stats",
-  authenticateUser,
-  rbac([ROLES.REPRESENTATIVE]),
-  getRepresentativeStats
-);
+// Admin routes
+router.put('/:representativeId/verify', authorize('admin'), verifyRepresentative);
 
 module.exports = router;

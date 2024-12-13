@@ -1,69 +1,66 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const verificationRequestSchema = new mongoose.Schema(
-  {
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    documentType: {
-      type: String,
-      required: true,
-      enum: ["id", "business_license", "other"],
-    },
-    document: {
-      url: {
-        type: String,
-        required: true,
-      },
-      key: {
-        type: String,
-        required: true,
-      },
-      type: {
-        type: String,
-        required: true,
-      },
-      path: {
-        type: String,
-        required: true,
-      },
-    },
-    status: {
-      type: String,
-      enum: ["pending", "approved", "rejected"],
-      default: "pending",
-    },
-    reviewedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    reviewedAt: Date,
-    reviewNotes: String,
+const verificationRequestSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  {
-    timestamps: true,
+  documentType: {
+    type: String,
+    required: true,
+    enum: ['nationalId', 'passport', 'driverLicense']
+  },
+  documentNumber: {
+    type: String,
+    required: true
+  },
+  documentUrl: {
+    type: String,
+    required: true
+  },
+  selfieUrl: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  reviewedAt: Date,
+  notes: String,
+  rejectionReason: String,
+  attempts: {
+    type: Number,
+    default: 1
   }
-);
-
-// Index for faster queries
-verificationRequestSchema.index({ user: 1, status: 1 });
-verificationRequestSchema.index({ status: 1, createdAt: -1 });
-
-// Clean up files when document is deleted
-verificationRequestSchema.pre("remove", async function (next) {
-  try {
-    const { deleteFromLocal } = require("../services/storageService");
-    await deleteFromLocal(this.document.key);
-    next();
-  } catch (error) {
-    console.error("Error deleting document file:", error);
-    next(error);
-  }
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model(
-  "VerificationRequest",
-  verificationRequestSchema
-);
+// Prevent multiple pending requests
+verificationRequestSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    const pendingRequest = await this.constructor.findOne({
+      user: this.user,
+      status: 'pending'
+    });
+
+    if (pendingRequest) {
+      throw new Error('You already have a pending verification request');
+    }
+
+    const previousRequests = await this.constructor.find({ user: this.user });
+    this.attempts = previousRequests.length + 1;
+  }
+  next();
+});
+
+const VerificationRequest = mongoose.model('VerificationRequest', verificationRequestSchema);
+
+module.exports = VerificationRequest;

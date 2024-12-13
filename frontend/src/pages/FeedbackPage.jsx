@@ -23,7 +23,7 @@ const FeedbackPage = () => {
 
   const fetchRepresentatives = async () => {
     try {
-      const response = await axios.get("/api/representatives");
+      const response = await axios.get("/representatives");
       setRepresentatives(response.data.representatives);
     } catch (error) {
       setError(
@@ -34,7 +34,7 @@ const FeedbackPage = () => {
 
   const fetchFeedback = async () => {
     try {
-      const response = await axios.get("/api/feedback");
+      const response = await axios.get("/feedback");
       setFeedbackList(response.data.feedback);
     } catch (error) {
       setError(error.response?.data?.message || "Error fetching feedback");
@@ -46,7 +46,7 @@ const FeedbackPage = () => {
   const handleSubmitFeedback = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("/api/feedback", newFeedback);
+      const response = await axios.post("/feedback", newFeedback);
       setFeedbackList([response.data.feedback, ...feedbackList]);
       setNewFeedback({
         title: "",

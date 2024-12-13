@@ -69,7 +69,7 @@ const ProfileWizard = () => {
         formDataToSend.append("profileImage", formData.profileImage);
       }
 
-      const response = await axios.post("/api/users/profile", formDataToSend, {
+      const response = await axios.post("/users/profile", formDataToSend, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
